@@ -7,7 +7,14 @@ import { calculate } from './server/calculators.ts';
 const calculatorApi = {
   name: 'farmready-calculator-api',
   configureServer(server: import('vite').ViteDevServer) {
-    server.middlewares.use(async (req, res, next) => {
+    server.middlewares.use(calculatorMiddleware);
+  },
+  configurePreviewServer(server: import('vite').PreviewServer) {
+    server.middlewares.use(calculatorMiddleware);
+  },
+};
+
+async function calculatorMiddleware(req: import('node:http').IncomingMessage, res: import('node:http').ServerResponse, next: (error?: unknown) => void) {
       const match = req.url?.match(/^\/api\/calculators\/([a-z-]+)$/);
       if (req.method !== 'POST' || !match) return next();
       try {
@@ -23,9 +30,7 @@ const calculatorApi = {
         res.setHeader('Content-Type', 'application/json');
         res.end(JSON.stringify({ error: error instanceof Error ? error.message : 'Invalid calculator input' }));
       }
-    });
-  },
-};
+}
 
 export default defineConfig(() => {
   return {
