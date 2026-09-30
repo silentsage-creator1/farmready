@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  }
+  
+  .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 14mm 13mm 17mm;
+    @bottom-left {
+      content: "FarmReady | Farm Investment Readiness Report";
+      color: #667085;
+      font: 8pt Arial, sans-serif;
+    }
+    @bottom-right {
+      content: "Page " counter(page) " of " counter(pages);
+      color: #667085;
+      font: 8pt Arial, sans-serif;
+    }
+  }
+  html, body, #root {
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+  body * {
+    visibility: hidden !important;
+  }
+  .print-container, .print-container * {
+    visibility: visible !important;
+  }
+  .report-cover {
+    min-height: 245mm !important;
+    padding: 18mm !important;
+    border-radius: 0 !important;
+    background: linear-gradient(145deg, #f0fdf4 0%, #ffffff 62%, #f8fafc 100%) !important;
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+  .report-page-break {
+    break-before: page !important;
+    page-break-before: always !important;
+  }
+  aside, header, nav, .no-print {
+    display: none !important;
+  }
+  main, .print-container, .print-document {
+    width: 100% !important;
+    height: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    position: static !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+  }
+  .print-container {
+    position: absolute !important;
+    inset: 0 auto auto 0 !important;
+  }
+  .print-document section, .print-document > div {
+    break-inside: avoid;
+  }
+  .print-document h1, .print-document h2, .print-document h3, .print-document h4 {
+    color: #111827 !important;
+    break-after: avoid;
+  }
+  .print-document p, .print-document li, .print-document span {
+    color: #1f2937 !important;
+  }
+  .print-document button, .print-document input {
+    display: none !important;
+  }
+  .print-document .bg-emerald-50, .print-document .bg-amber-50, .print-document .bg-blue-50 {
+    background: #fff !important;
+  }
+  .print-document table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .print-document tr {
+    break-inside: avoid;
+  }
+}
+
+@media screen {
+  .report-cover {
+    min-height: 34rem;
+    padding: 2rem;
+    border-radius: 1.5rem;
+    background: linear-gradient(145deg, #f0fdf4 0%, #ffffff 62%, #f8fafc 100%);
+  }
+}

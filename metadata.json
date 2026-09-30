@@ -1,0 +1,8 @@
+{
+  "name": "Remix FarmReady Nigeria",
+  "description": "Farm investment readiness and decision-support platform for prospective farmers and farm investors in Nigeria.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
