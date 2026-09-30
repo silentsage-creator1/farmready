@@ -14,20 +14,31 @@ export function useCalculator(type: string, input: Record<string, unknown>) {
       setLoading(true);
       try {
         const response = await fetch(`/api/calculators/${type}`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, signal: controller.signal,
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, credentials: 'same-origin', signal: controller.signal,
         });
         const responseText = await response.text();
-        let data: { result?: CalculatorResult; error?: string };
+        let data: { result?: CalculatorResult; error?: unknown; message?: unknown; protection?: unknown };
         try {
           data = JSON.parse(responseText) as { result?: CalculatorResult; error?: string };
         } catch {
           const contentType = response.headers.get('content-type') ?? '';
+          const excerpt = responseText.replace(/\s+/g, ' ').trim().slice(0, 180);
           const reason = contentType.includes('text/html')
-            ? 'The calculator API returned a web page instead of JSON. Restart the FarmReady development server or configure the production API route.'
-            : 'The calculator API returned an invalid response. Check that the FarmReady API server is running.';
+            ? `The calculator API returned a web page (HTTP ${response.status}) instead of JSON. Check the deployed API route. ${excerpt}`
+            : `The calculator API returned a non-JSON response (HTTP ${response.status}, ${contentType || 'unknown content type'}). ${excerpt || 'The response body was empty.'}`;
           throw new Error(reason);
         }
-        if (!response.ok) throw new Error(data.error ?? 'Unable to calculate');
+        if (!response.ok) {
+          const errorMessage = typeof data.error === 'string'
+            ? data.error
+            : typeof data.message === 'string'
+              ? data.message
+              : undefined;
+          const protectedDeployment = response.status === 401 || response.status === 403 || data.protection != null;
+          throw new Error(protectedDeployment
+            ? 'Vercel Authentication blocked the calculator API request. Open this deployment in an authenticated session or use the public production URL.'
+            : errorMessage ?? `Calculator API request failed (HTTP ${response.status}).`);
+        }
         if (!data.result || typeof data.result !== 'object') throw new Error('The calculator API response is missing its result.');
         setResult(data.result);
         setError(null);
