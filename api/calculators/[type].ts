@@ -1,4 +1,4 @@
-import { calculate } from '../../server/calculators';
+import { calculate } from '../../server/calculators.js';
 
 interface CalculatorRequest {
   method?: string;

@@ -1,4 +1,4 @@
-import { FarmProject, FinancialMetrics } from '../types';
+import type { FarmProject, FinancialMetrics } from '../types/index.js';
 
 /**
  * Format currency in Nigerian Naira (₦) with commas

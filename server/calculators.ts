@@ -1,5 +1,5 @@
 export type CalculatorInput = Record<string, unknown>;
-import { calculateFinancialMetrics, computeWhatIf, generate12MonthCashFlow } from '../src/utils/calculations';
+import { calculateFinancialMetrics, computeWhatIf, generate12MonthCashFlow } from '../src/utils/calculations.js';
 
 const n = (input: CalculatorInput, key: string, fallback = 0) => {
   const value = Number(input[key]);
