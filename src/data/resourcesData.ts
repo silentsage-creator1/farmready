@@ -8,113 +8,186 @@ export interface ResourceArticle {
   content: string;
 }
 
+// Article wording and titles are transcribed from the provided guide.
 export const resourcesList: ResourceArticle[] = [
   {
-    id: 'res-1',
-    title: 'Farm Finance Fundamentals for Nigerian Agribusiness',
-    category: 'Farm Finance Fundamentals',
-    readTime: '6 min read',
-    summary: 'Distinguish between initial capital expenditure, working capital requirements, and biological cycle cash flow.',
-    keyTakeaways: [
-      'Never allocate all initial capital to land acquisition or fixed machinery.',
-      'Maintain at least 25% of your total budget as working capital reserves for input and operational cost inflation.',
-      'Biological production does not generate revenue until harvest; timing cash inflows is paramount.'
-    ],
-    content: `Starting an agricultural venture in Nigeria requires disciplined capital budgeting. Many prospective investors exhaust their funds during clearing and land purchase, leaving insufficient working capital to feed livestock or fertilize crops during the critical mid-season growth phase.
-
-A robust farm budget categorizes expenditures into:
-1. Capital Expenditure (Capex): Irrigated infrastructure, fencing, sheds, boreholes.
-2. Operating Expenditure (Opex): Seeds, feed, labor, fuel, chemicals, and veterinary care.
-3. Reserve Contingency: Minimum 15-20% buffer against weather shocks and market volatility.`
+    id: "farm-investment-budget",
+    title: "How to Create a Farm Investment Budget",
+    category: "Farm Budgeting",
+    readTime: "2 min read",
+    summary: "Before putting money into a farm, you should know exactly where that money will go.",
+    keyTakeaways: ["Land", "Buildings or farm structures", "Equipment and tools"],
+    content: "Before putting money into a farm, you should know exactly where that money will go. A farm investment budget helps you estimate the money you need before you start and the costs you will have while the farm is operating.\n\nStart With Everything You Need\nWrite down the main things your farm will require, such as: ● Land ● Buildings or farm structures ● Equipment and tools ● Seeds, animals, feed, or other inputs ● Labour ● Water and electricity ● Transportation ● Storage ● Medication or pest control Do not rely on memory. Write down each cost and get realistic price estimates.\n\nSeparate Your Costs\nPut your costs into two groups: One-time costs — expenses needed to set up the farm. Running costs — expenses you will continue paying while the farm operates. This makes it easier to see how much money you need to start and how much you need to keep the farm running.\n\nThink Beyond the First Day\nAsk: How many months will I need to operate before the farm starts generating income? Include the running costs for that period in your budget. Also keep some money aside for unexpected expenses.\n\nYour Basic Budget\nTotal Farm Capital Needed = Setup Costs + Running Costs + Emergency Reserve Your budget does not need to be perfect. It needs to be realistic enough to prevent you from starting a farm without enough money.\n\nBefore You Invest\nAsk yourself: Do I have enough money to start this farm and keep it running until it begins generating income? If the answer is no, adjust the size of the project, reduce unnecessary costs, or look for additional funding before starting.",
   },
   {
-    id: 'res-2',
-    title: 'Validating Buyers Before Putting Seeds in the Ground',
-    category: 'Finding Customers',
-    readTime: '5 min read',
-    summary: 'Why an assumed customer is the #1 killer of farm investments and how to obtain verified off-take agreements.',
-    keyTakeaways: [
-      'An assumed buyer is an untested hypothesis; a validated buyer has agreed pricing, specifications, and volume.',
-      'Off-takers look for moisture consistency, grading, and reliability before agreeing to purchase.',
-      'Securing purchase intent contracts reduces distress farm-gate sales at harvest time.'
-    ],
-    content: `Too many agricultural investors plant first and search for buyers when the harvest is wilting in the field. Commercial off-takers such as feed millers, breweries, food packaging companies, and large institutional buyers require specific standards:
-
-- Moisture Content: Commercial maize millers typically require 12% to 14% moisture content maximum.
-- Foreign Matter: Grain must be free of stones, mold, and broken chaff.
-- Consistent Volume: Buyers prefer predictable delivery schedules.
-
-Always interview at least 3 active commodity traders or processing managers in your region before choosing your crop variety.`
+    id: "startup-vs-operating-costs",
+    title: "Understanding Startup Costs vs. Operating Costs",
+    category: "Farm Budgeting",
+    readTime: "2 min read",
+    summary: "One of the easiest ways to make a poor farm budget is to look only at the cost of starting.",
+    keyTakeaways: ["Land", "Farm buildings", "Equipment"],
+    content: "One of the easiest ways to make a poor farm budget is to look only at the cost of starting. A farm has startup costs and operating costs, and you need to understand both before investing.\n\nWhat Are Startup Costs?\nStartup costs are the expenses you need to get the farm ready for production. They may include: ● Land ● Farm buildings ● Equipment ● Irrigation or water systems ● Initial seeds or animals ● Fencing and other setup work These costs are usually paid before or near the beginning of the project.\n\nWhat Are Operating Costs?\nOperating costs are the expenses required to keep the farm running. They may include: ● Feed or farm inputs ● Labour ● Water and electricity ● Transport ● Medication ● Fertilizer ● Pest control ● Repairs ● Storage and packaging These costs can continue for months or even years.\n\nWhy Does This Matter?\nImagine you have enough money to build the farm but not enough money to operate it. You may have a farm that is ready to produce but cannot afford the inputs or labour needed to continue. That is why your budget should answer two questions: How much do I need to start? How much do I need to keep going?\n\nThe Simple Difference\nStartup costs = Getting the farm ready Operating costs = Keeping the farm running Both should be included when calculating the total capital you need.\n\nFarmReady Tip 🌱\nBefore investing, estimate your operating costs for the period between starting production and receiving your first meaningful income. That amount is just as important as your startup cost.",
   },
   {
-    id: 'res-3',
-    title: 'Evaluating Land: Lease vs Buy in Commercial Farming',
-    category: 'Farm Investment Planning',
-    readTime: '7 min read',
-    summary: 'Why leasing or community partnership is frequently more capital-efficient than outright land acquisition for new farmers.',
-    keyTakeaways: [
-      'In many agricultural states (Oyo, Ogun, Kaduna, Niger), long-term agricultural leases cost ₦25,000 to ₦60,000 per hectare annually.',
-      'Buying 10 hectares outright can cost ₦5,000,000 to ₦15,000,000+, consuming capital needed for irrigation and high-yield seeds.',
-      'Leasing allows testing soil quality, community relations, and local water security with minimal sunk risk.'
-    ],
-    content: `Land ownership confers pride, but in commercial agriculture, capital allocation efficiency determines survival. Land that you own outright does not produce crops unless you have the cash remaining for land clearing, tractor services, hybrid seeds, and basal fertilizers.
-
-When should you buy land?
-- Permanent perennial crops (oil palm, cocoa, cashew) that take 4 to 20 years.
-- Specialized permanent infrastructure (cold storage hubs, industrial livestock pens).
-
-When should you lease or partner?
-- Annual grain and legume crops (maize, soybeans, cowpea).
-- Pilot farming operations in a new ecological zone.
-- When your available capital is under ₦10,000,000.`
+    id: "calculate-farm-financing-gap",
+    title: "How to Calculate Your Farm's Financing Gap",
+    category: "Farm Finance",
+    readTime: "2 min read",
+    summary: "Knowing how much your farm needs is only half of the calculation.",
+    keyTakeaways: ["Setup costs", "Operating costs"],
+    content: "Knowing how much your farm needs is only half of the calculation. You also need to know whether you actually have enough money to fund it. The difference between what your farm needs and what you can provide is your financing gap.\n\nStep 1: Calculate Your Total Requirement\nAdd together: ● Setup costs ● Operating costs ● Emergency reserve This gives you your total required capital.\n\nStep 2: Calculate Your Available Capital\nAdd the money you can safely put into the project. This could include: ● Your savings ● Money already available for the project ● Confirmed funding Only include money you can realistically access.\n\nStep 3: Find the Difference\nUse this simple calculation: Financing Gap = Total Required Capital − Available Capital For example, if your farm requires ₦5 million and you have ₦3.5 million available: ₦5 million − ₦3.5 million = ₦1.5 million gap You would need to address that gap before starting at the planned size.\n\nWhat Can You Do About a Funding Gap?\nYou could: ● Reduce the size of the farm ● Remove unnecessary expenses ● Increase your available capital ● Look for suitable financing ● Delay the project until you are better prepared Do not automatically fill the entire gap with debt. The goal is to find a level of investment that you can realistically support.\n\nFarmReady Check\nBefore starting, you should know three numbers: Required Capital Available Capital Financing Gap Once you know these numbers, you have a much clearer picture of whether your planned farm is financially ready.",
   },
   {
-    id: 'res-4',
-    title: 'Managing Agricultural Risks in the Tropical Belt',
-    category: 'Managing Farm Risk',
-    readTime: '8 min read',
-    summary: 'Practical controls for drought, fall armyworm, price collapse, cattle encroachment, and post-harvest spoilage.',
-    keyTakeaways: [
-      'Supplementary drip or furrow irrigation turns farming from a weather gamble into a manageable business.',
-      'Combine biological scouting with chemical rotation to avoid pest resistance.',
-      'Take advantage of subsidized agricultural insurance through the Nigerian Agricultural Insurance Corporation (NAIC).'
-    ],
-    content: `Risk cannot be eliminated, but it can be bounded. The three most severe risks in Nigerian crop production are erratic rainfall onset, aggressive pest outbreaks (such as Fall Armyworm and stem borers), and post-harvest price depression during national harvest peaks.
-
-Establishing a water pond or borehole with booster pumps provides life-saving moisture during mid-season dry spells. Furthermore, hermetic storage bags (PICS bags) allow holding dry grains for 3 to 6 months until market supply tightens and prices surge.`
+    id: "finance-without-overborrowing",
+    title: "How to Finance a Farm Without Over-Borrowing",
+    category: "Farm Finance",
+    readTime: "2 min read",
+    summary: "Borrowing money can help you start or expand a farm, but too much debt can put pressure on the farm.",
+    keyTakeaways: ["How much will I repay each month?", "When will repayment begin?", "How long will I be making payments?"],
+    content: "Borrowing money can help you start or expand a farm, but too much debt can put pressure on the farm. The goal is not simply to get the largest loan possible. The goal is to borrow an amount the farm can realistically repay.\n\nKnow How Much You Actually Need\nStart with your farm budget. Do not borrow more than you need just because a lender is willing to offer more. First determine: How much will the farm cost? Then determine: How much can I contribute myself? The difference is the amount you may need to finance.\n\nCheck Your Repayment Ability\nBefore accepting a loan, ask: ● How much will I repay each month? ● When will repayment begin? ● How long will I be making payments? ● How much interest will I pay? ● Will the farm generate enough income to cover the repayment? Your farm should not depend on perfect conditions just to make its loan payments.\n\nLeave Room for Problems\nFarm income can change because of: ● Lower production ● Changing market prices ● Weather problems ● Disease ● Higher input costs ● Delayed sales If your loan repayment leaves you with no room for these problems, the loan may be too large for your situation.\n\nConsider Starting Smaller\nIf the amount you can safely finance is less than the cost of your original plan, consider reducing the farm size instead of taking on excessive debt.\n\nRemember\nA loan is not extra income. It is money that must be repaid. Before borrowing, make sure the farm can reasonably carry the repayment without putting the entire investment at risk.",
   },
   {
-    id: 'res-5',
-    title: 'Practical Farm Record Keeping and Cash Flow Monitoring',
-    category: 'Record Keeping',
-    readTime: '4 min read',
-    summary: 'Simple daily protocols to prevent leakage, verify worker attendance, and track real unit costs.',
-    keyTakeaways: [
-      'A farm without daily logs is impossible to audit or scale.',
-      'Record physical input usage alongside financial expenditure.',
-      'Track mortality and feed conversion ratios (FCR) weekly for livestock and fish.'
-    ],
-    content: `Effective agricultural record keeping does not require complex ERP software. A disciplined physical logbook with standardized daily sheets for:
-1. Daily worker attendance and specific tasks completed (ridging, spraying, weeding).
-2. Input inventory issued from the farm store (liters of herbicide, bags of fertilizer).
-3. Rainfall log and irrigation runtime hours.
-4. Fuel consumption logs for tractors and generators.
-
-These four simple logs prevent up to 80% of common farm operational leaks and ghost expenditures.`
+    id: "compare-farm-financing-options",
+    title: "How to Compare Different Farm Financing Options",
+    category: "Farm Finance",
+    readTime: "2 min read",
+    summary: "There may be several ways to raise money for a farm.",
+    keyTakeaways: ["Total cost", "Interest or fees", "Repayment period"],
+    content: "There may be several ways to raise money for a farm. You might use your own savings, borrow money, work with a cooperative, bring in an investor, or combine different sources. The important thing is to understand the cost and conditions of each option before choosing one.\n\nCommon Financing Options\nPersonal Savings You use your own money to fund the farm. Main advantage: You do not have loan repayments. Consideration: You are putting your own money at risk.\n\nAgricultural Loans\nYou borrow money and repay it over an agreed period, usually with interest. Main advantage: You can access more capital than your current savings. Consideration: You must make repayments even when the farm performs below expectations.\n\nCooperatives\nFarmers may work together to access savings, credit, inputs, or other financial support. Main advantage: Group support can make financing and access to resources easier. Consideration: You need to understand the cooperative's rules, fees, and repayment requirements.\n\nInvestors or Partners\nAnother person or organisation provides money in exchange for an agreed share of the business or its returns. Main advantage: You may get funding without taking a traditional loan. Consideration: You may have to share ownership, profits, or decision-making.\n\nHow to Compare Them\nDo not compare financing options based only on how much money they offer. Look at: ● Total cost ● Interest or fees ● Repayment period ● Repayment schedule ● Security or collateral required ● Ownership you may give up ● Risk to your personal finances ● Flexibility if the farm performs poorly\n\nFarmReady Tip 🌱\nCreate a simple comparison table before making a decision. How much will I receive? How much will it cost me? When must I repay it? What happens if the farm does not perform as expected? The financing option should fit the size, timing, and risk of your farm—not simply provide the largest amount of money.",
   },
   {
-    id: 'res-6',
-    title: 'Understanding Break-Even Economics for Farm Investors',
-    category: 'Farm Finance Fundamentals',
-    readTime: '6 min read',
-    summary: 'How to calculate your safety buffer in tonnes or kilograms before committing capital.',
-    keyTakeaways: [
-      'Break-even quantity tells you how much yield is consumed merely paying for your costs.',
-      'If your break-even yield is 80% of regional maximum yield, your margin of safety is razor thin.',
-      'Aim for a production model where break-even is achieved at 40-55% of expected output.'
-    ],
-    content: `Break-even analysis answers the most critical investor question: 'What is the minimum harvest I must sell to not lose my capital?'
-
-Fixed costs include permanent manager salary, land lease, borehole maintenance, and security. Variable costs include seed, fertilizer, bags, and harvest labor. By understanding your contribution margin per kilogram or tonne, you can immediately assess whether your projected yields provide an adequate cushion against bad weather or price dips.`
-  }
+    id: "assess-climate-risk",
+    title: "How to Assess Climate Risk Before Investing in a Farm",
+    category: "Risk Management",
+    readTime: "2 min read",
+    summary: "Weather can have a major effect on a farm's production, costs, and income.",
+    keyTakeaways: ["What is the normal rainfall pattern?", "Is the area prone to flooding?", "Are dry periods common?"],
+    content: "Weather can have a major effect on a farm's production, costs, and income. Before investing, you need to understand the environmental risks that could affect your farm.\n\nStart With the Location\nAsk: ● What is the normal rainfall pattern? ● Is the area prone to flooding? ● Are dry periods common? ● What are the usual temperatures? ● Is reliable water available? A good location for farming should match the needs of the crop or animals you plan to produce.\n\nUnderstand Your Farm's Exposure\nDifferent farms face different risks. For example, a farm that depends heavily on rainfall may be more affected by a long dry period, while a farm in a low-lying area may face greater flood risk. Identify the weather conditions that could cause the biggest loss to your farm.\n\nCheck How You Can Reduce the Risk\nBefore investing, consider whether you can: ● Provide alternative water sources ● Improve drainage ● Choose suitable crops or animals ● Adjust planting times ● Protect farm structures ● Get appropriate agricultural insurance\n\nFarmReady Tip 🌱\nDon't ask only: “Can I grow this here?” Also ask: “What happens to my farm if the weather does not go as expected?” Understanding this before investing can help you prepare for problems instead of reacting to them later.",
+  },
+  {
+    id: "identify-flood-drought-risks",
+    title: "How to Identify Flood and Drought Risks",
+    category: "Risk Management",
+    readTime: "1 min read",
+    summary: "Floods and droughts can damage crops, affect animals, destroy infrastructure, and increase farm costs.",
+    keyTakeaways: ["Previous flooding in the area", "Low-lying land", "Poor drainage"],
+    content: "Floods and droughts can damage crops, affect animals, destroy infrastructure, and increase farm costs. Before investing, check whether your proposed farm location is exposed to either risk.\n\nChecking Flood Risk\nLook for signs such as: ● Previous flooding in the area ● Low-lying land ● Poor drainage ● Nearby rivers or waterways ● Water marks or signs of previous flooding ● Roads that become difficult to access during heavy rain Ask local farmers about what happens during the rainy season. Their experience can provide useful information about the area.\n\nChecking Drought Risk\nConsider: ● How reliable rainfall is ● How long dry periods normally last ● Whether there is a reliable water source ● Whether irrigation is possible ● How much water your farm will require\n\nPlan Before You Invest\nIf the location has a known risk, ask whether you can reduce it. For flood risk, this may involve better drainage or choosing safer land. For drought risk, it may involve irrigation, water storage, or choosing crops that are better suited to the conditions.\n\nFarmReady Tip 🌱\nA cheap piece of land can become expensive if flooding or lack of water repeatedly damages production. Check the environmental risks before committing your money.",
+  },
+  {
+    id: "manage-pests-crop-diseases",
+    title: "How to Manage Pests and Crop Diseases",
+    category: "Risk Management",
+    readTime: "1 min read",
+    summary: "Pests and diseases can reduce production and cause serious financial losses if they are not identified and managed early.",
+    keyTakeaways: ["What they look like", "What causes them", "How they spread"],
+    content: "Pests and diseases can reduce production and cause serious financial losses if they are not identified and managed early. The best approach is to prevent problems where possible and act quickly when they appear.\n\nKnow the Common Problems\nBefore starting, learn about the pests and diseases that commonly affect your chosen crop or animals. Understand: ● What they look like ● What causes them ● How they spread ● How they can be prevented ● What action to take when they appear\n\nMonitor Your Farm Regularly\nDo not wait until a problem becomes serious. Regularly check: ● Crops ● Leaves and stems ● Fruits ● Animals ● Feed and water areas ● Farm structures Early detection can make problems easier and less expensive to manage.\n\nPlan for the Cost\nInclude pest and disease management in your farm budget. You may need money for: ● Preventive treatments ● Veterinary services ● Approved pest-control products ● Replacement of affected plants or animals ● Expert advice\n\nFarmReady Tip 🌱\nDon't treat pest and disease control as an emergency expense only. Include prevention and monitoring in your farm plan from the beginning.",
+  },
+  {
+    id: "diversify-farm-risk",
+    title: "How to Diversify Your Farm to Reduce Risk",
+    category: "Risk Management",
+    readTime: "1 min read",
+    summary: "Putting all your money into one crop, animal, or market can increase your risk.",
+    keyTakeaways: ["Producing more than one crop", "Combining crops and livestock", "Selling to different buyers"],
+    content: "Putting all your money into one crop, animal, or market can increase your risk. If that one activity performs badly, a large part of your investment may be affected. Diversification means spreading your farm activities or income sources so that you are not completely dependent on one thing.\n\nWays to Diversify\nDepending on your farm, you could consider: ● Producing more than one crop ● Combining crops and livestock ● Selling to different buyers ● Selling different farm products ● Producing at different times of the year The right approach depends on your available money, skills, land, labour, and market.\n\nDon't Diversify Just for the Sake of It\nMore activities do not automatically mean less risk. Each additional activity can also require more: ● Money ● Labour ● Equipment ● Management ● Knowledge Choose activities that you can realistically manage.\n\nFarmReady Tip 🌱\nAsk yourself: “If my main farm activity fails this season, will I still have another source of income?” If the answer is no, consider whether some form of diversification could reduce your exposure to that risk.",
+  },
+  {
+    id: "stress-test-farm-bad-seasons",
+    title: "How to Stress-Test Your Farm Against Bad Seasons",
+    category: "Risk Management",
+    readTime: "2 min read",
+    summary: "A farm plan may look profitable when everything goes well.",
+    keyTakeaways: ["Expected production", "Expected selling price", "Revenue"],
+    content: "A farm plan may look profitable when everything goes well. But what happens when things don't go according to plan? Stress-testing means checking how your farm would perform under difficult conditions before you invest.\n\nStart With Your Normal Plan\nFirst estimate: ● Expected production ● Expected selling price ● Revenue ● Operating costs ● Profit ● ROI ● Payback period Then change the conditions.\n\nTest Difficult Situations\nAsk: What if production is lower than expected? What if selling prices fall? What if input costs increase? What if the farm takes longer to generate income? What if part of the production is lost? Look at how each situation affects your expected profit and cash flow.\n\nLearn From the Results\nIf a small change causes your farm to lose most of its expected profit, you have identified an important risk. You can then consider ways to reduce it, such as: ● Reducing costs ● Starting on a smaller scale ● Diversifying production ● Finding more buyers ● Improving farm protection ● Keeping an emergency reserve\n\nFarmReady Tip 🌱\nDon't only ask: “How much can I make if everything goes well?” Also ask: “Can this farm survive if things go badly?” That is the purpose of stress-testing—and it is an important step before committing your investment.",
+  },
+  {
+    id: "evaluate-farmland",
+    title: "How to Evaluate Farmland Before Investing",
+    category: "Land & Site Checks",
+    readTime: "2 min read",
+    summary: "Finding affordable farmland does not necessarily mean you have found a good investment.",
+    keyTakeaways: ["What crop or animals will you produce?", "How much land do you need?", "Does the land have suitable soil?"],
+    content: "Finding affordable farmland does not necessarily mean you have found a good investment. Before committing your money, you need to know whether the land is suitable for your farm, accessible, and safe to invest in.\n\nStart With the Farm's Needs\nDifferent farms need different types of land. Consider: ● What crop or animals will you produce? ● How much land do you need? ● Does the land have suitable soil? ● Is there enough water? ● Can you reach the farm easily? ● Is the land suitable for the type of farming you plan to do?\n\nCheck the Location\nLook beyond the land itself. Check: ● Road access ● Distance to markets ● Access to water ● Electricity where necessary ● Security ● Nearby farms and communities ● Flood or environmental risks A cheap farm that is difficult to reach or far from your market can become expensive to operate.\n\nVisit the Land\nDo not make your decision based only on pictures or what someone tells you. Visit the land and inspect it yourself. Where necessary, get help from qualified professionals who can assess things you cannot verify yourself.\n\nCheck the Documents\nBefore paying, make sure the person offering the land has the right to sell or lease it and that the relevant documents can be verified.\n\nFarmReady Tip 🌱\nDon't ask only: “How much is this land?” Ask: “Can this land support my farm and my investment plan?”",
+  },
+  {
+    id: "farmland-due-diligence",
+    title: "Land Due Diligence: What Every Farm Investor Should Check",
+    category: "Land & Site Checks",
+    readTime: "2 min read",
+    summary: "Due diligence simply means checking important information before committing your money.",
+    keyTakeaways: ["Ownership", "Documents", "Boundaries"],
+    content: "Due diligence simply means checking important information before committing your money. When dealing with farmland, it helps you discover problems before they become expensive.\n\nCheck These Areas\nOwnership Confirm who owns or controls the land and whether they have the right to sell or lease it.\n\nDocuments\nAsk for the relevant land documents and have them properly verified.\n\nBoundaries\nConfirm the actual size and boundaries of the land.\n\nDisputes\nFind out whether there are ownership, family, community, or other disputes involving the land.\n\nLand Use\nMake sure the land can legally be used for the type of farming you plan to carry out.\n\nSoil and Water\nCheck whether the land can support your intended production.\n\nAccess\nMake sure workers, farm equipment, and vehicles can reach the farm.\n\nEnvironmental Risk\nCheck for flood risk, erosion, poor drainage, or other conditions that could affect production.\n\nAgreement Terms\nIf leasing, understand the lease period, payment terms, responsibilities, and conditions before signing.\n\nDon't Rush the Process\nA land opportunity may look attractive because the price is low or the seller wants quick payment. Take time to verify the important information first.\n\nFarmReady Tip 🌱\nNever treat land verification as an unnecessary delay. It is part of protecting your investment.",
+  },
+  {
+    id: "verify-land-ownership",
+    title: "How to Verify Land Ownership and Documentation",
+    category: "Land & Site Checks",
+    readTime: "1 min read",
+    summary: "One of the biggest risks when acquiring farmland is paying for land without properly confirming who owns it and whether the documents are genuine.",
+    keyTakeaways: ["Title documents", "Survey documents", "Deeds or agreements"],
+    content: "One of the biggest risks when acquiring farmland is paying for land without properly confirming who owns it and whether the documents are genuine.\n\nStart With the Person Offering the Land\nAsk: Who owns this land? How did they acquire it? Do they have the authority to sell or lease it? Do not assume that having a document automatically proves ownership.\n\nCheck the Documents\nDepending on the land and location, documents may include: ● Title documents ● Survey documents ● Deeds or agreements ● Allocation documents ● Other relevant government or land records The exact requirements can vary, so important documents should be checked with the appropriate land authority or a qualified legal professional.\n\nConfirm the Land Matches the Documents\nThe information on the documents should correspond with the actual land. Check details such as: ● Location ● Size ● Boundaries ● Owner's information ● Survey information\n\nGet Professional Help When Necessary\nLand transactions can involve legal and technical issues that are difficult to verify on your own. For a significant investment, consider using a qualified land professional, surveyor, or lawyer to help verify the land and documents.\n\nFarmReady Tip 🌱\nNever make a major land payment based only on trust or verbal promises. Verify before you pay.",
+  },
+  {
+    id: "assess-soil-water-access",
+    title: "How to Assess Soil, Water and Road Access",
+    category: "Land & Site Checks",
+    readTime: "1 min read",
+    summary: "Land can look perfect and still be unsuitable for your farm.",
+    keyTakeaways: ["Soil type", "Fertility", "Drainage"],
+    content: "Land can look perfect and still be unsuitable for your farm. Three things deserve particular attention before investing: Soil, water, and access.\n\nCheck the Soil\nYour soil needs to match what you plan to produce. Consider: ● Soil type ● Fertility ● Drainage ● Erosion ● Previous use of the land For an important investment, consider getting a proper soil test instead of relying only on appearance.\n\nCheck Water Availability\nFind out: ● Is there a reliable water source? ● Is the water suitable for your farm? ● Will you need a borehole, well, irrigation, or storage? ● What will it cost to provide water? Water problems can increase your costs significantly.\n\nCheck Road Access\nThink about the entire production process. Can vehicles reach the farm when: ● Heavy rain occurs? ● Harvest is ready? ● Equipment needs to be delivered? ● Products need to be transported to buyers? Poor access can increase transport costs and cause delays or product losses.\n\nCalculate the Extra Cost\nIf the land requires major work to provide water or improve access, include those costs in your investment budget.\n\nFarmReady Tip 🌱\nA piece of land is not truly affordable if you later have to spend a large amount of money making it usable.",
+  },
+  {
+    id: "buying-vs-leasing-farmland",
+    title: "Buying vs. Leasing Farmland: Which Is Better?",
+    category: "Land & Site Checks",
+    readTime: "2 min read",
+    summary: "You do not always need to buy farmland to start farming.",
+    keyTakeaways: ["You have enough capital", "You plan to farm for a long time", "The land is suitable for your long-term plans"],
+    content: "You do not always need to buy farmland to start farming. Depending on your situation, you may be able to lease land and use it for an agreed period. The right choice depends on your capital, farm plans, time frame, and the terms of the agreement.\n\nBuying Farmland\nBuying gives you long-term control over the land, subject to applicable laws and documentation. It may make sense when: ● You have enough capital ● You plan to farm for a long time ● The land is suitable for your long-term plans ● You have properly verified the ownership and documents However, buying requires a large amount of money upfront.\n\nLeasing Farmland\nLeasing allows you to use land for an agreed period without purchasing it outright. It may be useful when: ● You have limited starting capital ● You want to test a farming idea ● You only need the land for a specific period ● You want to preserve money for production and other farm expenses However, you need to carefully understand the lease period, payment terms, permitted activities, renewal conditions, and responsibilities.\n\nCompare the Total Cost\nDon't look only at the purchase price or yearly rent. Consider: ● Total cost over your planned farming period ● Cost of preparing the land ● Cost of improvements ● Length of use ● Security of your investment ● What happens when the agreement ends\n\nFarmReady Tip 🌱\nAsk yourself: “Do I need to own this land, or do I simply need reliable access to land for my farming plan?” Your answer can help you determine which option fits your investment plan.",
+  },
+  {
+    id: "identify-farm-market",
+    title: "How to Identify a Market Before Starting a Farm",
+    category: "Market & Sales",
+    readTime: "2 min read",
+    summary: "A farm can produce good-quality products and still struggle if there are not enough buyers.",
+    keyTakeaways: ["Consumers", "Retailers", "Restaurants"],
+    content: "A farm can produce good-quality products and still struggle if there are not enough buyers. Before investing, you should understand who will buy your products, what they want, and how much they are willing to pay.\n\n1. Identify Your Target Buyers\nDecide who you expect to sell to. Your buyers could include: ● Consumers ● Retailers ● Restaurants ● Food processors ● Wholesalers ● Other businesses Knowing your target buyer helps you plan what to produce and how to sell it.\n\n2. Understand What Buyers Want\nFind out: ● Which products are in demand? ● What quality do buyers expect? ● How much do they normally buy? ● How often do they buy? ● What price range do they accept? ● What packaging or delivery requirements do they have?\n\n3. Check Your Competition\nLook at other farmers selling the same product. Consider: ● How much they produce ● Their selling prices ● Their product quality ● Where they sell ● How they reach buyers You need to understand how your farm will compete.\n\n4. Check the Market Before You Produce\nTalk to potential buyers before investing heavily. Ask whether they would actually buy your planned product and under what conditions. Avoid assuming that because people need food, they will automatically buy from your farm.\n\n5. Plan Your Sales Channel\nDecide how your products will reach buyers: Farm → Wholesaler → Retailer → Consumer or Farm → Direct Buyer Your choice affects your price, transport costs, and profit.\n\nFarmReady Tip 🌱\nDo not start with “What can I produce?” Start with “Who will buy what I produce?”",
+  },
+  {
+    id: "find-farm-buyers",
+    title: "How to Find Buyers for Your Farm Products",
+    category: "Market & Sales",
+    readTime: "1 min read",
+    summary: "Finding buyers should begin before harvest, not after.",
+    keyTakeaways: ["Wholesalers", "Retailers", "Restaurants"],
+    content: "Finding buyers should begin before harvest, not after. A clear buyer plan can reduce the risk of producing products that are difficult to sell.\n\n1. List Potential Buyers\nCreate a list of possible buyers such as: ● Wholesalers ● Retailers ● Restaurants ● Food processors ● Markets ● Direct consumers ● Institutions\n\n2. Contact Buyers Early\nSpeak with potential buyers before production or before harvest. Ask about: ● Products they need ● Quantity required ● Quality requirements ● Preferred delivery time ● Expected price ● Payment terms\n\n3. Build Relationships\nDo not depend on only one buyer if you can avoid it. Build relationships with several potential buyers so you have alternatives if one buyer stops purchasing or reduces their orders.\n\n4. Understand Their Requirements\nSome buyers may require specific sizes, quality, packaging, quantities, or delivery schedules. Knowing these requirements early allows you to plan your production properly.\n\n5. Keep Buyer Information\nMaintain a simple buyer list containing: ● Buyer name ● Product needed ● Quantity ● Expected buying period ● Contact details ● Agreed requirements Update it regularly.\n\nFarmReady Tip 🌱\nYour harvest should already have potential buyers before it is ready for sale.",
+  },
+  {
+    id: "validate-demand",
+    title: "How to Validate Demand Before Investing",
+    category: "Market & Sales",
+    readTime: "2 min read",
+    summary: "One of the biggest mistakes a new farmer can make is investing heavily based on assumptions about demand.",
+    keyTakeaways: ["Product type", "Expected quantity", "Quality"],
+    content: "One of the biggest mistakes a new farmer can make is investing heavily based on assumptions about demand. Demand validation means checking whether people or businesses are actually willing to buy your planned farm products.\n\n1. Identify Your Product\nBe specific about what you want to produce. Consider: ● Product type ● Expected quantity ● Quality ● Production period ● Expected selling price\n\n2. Talk to Potential Buyers\nSpeak directly with people or businesses that may buy your products. Ask: ● Do you currently buy this product? ● How much do you normally buy? ● How often do you buy it? ● What quality do you require? ● What price range do you normally pay? ● When do you need it?\n\n3. Check Existing Market Activity\nLook at existing sellers and buyers. If many farmers are already producing the same product, find out whether the market can absorb additional production.\n\n4. Test Before Scaling\nIf possible, start with a smaller production level instead of immediately investing your entire budget. Use the results to understand: ● Actual demand ● Selling price ● Buyer response ● Production costs ● Problems with selling\n\n5. Compare Demand With Your Planned Production\nYour planned production should make sense compared with the amount you can realistically sell. Producing more than your market can absorb can lead to lower prices and wasted products.\n\nFarmReady Tip 🌱\nDo not invest based only on what you think people will buy. Test the market before committing large amounts of money.",
+  },
+  {
+    id: "reduce-post-harvest-losses",
+    title: "How to Reduce Post-Harvest Losses",
+    category: "Market & Sales",
+    readTime: "1 min read",
+    summary: "Post-harvest losses happen when farm products are damaged, spoiled, lost, or reduced in quality after harvesting.",
+    keyTakeaways: ["Temperature", "Moisture", "Ventilation"],
+    content: "Post-harvest losses happen when farm products are damaged, spoiled, lost, or reduced in quality after harvesting. These losses can reduce your revenue even when production was successful.\n\n1. Harvest at the Right Time\nHarvest products when they are ready for the intended market. Harvesting too early or too late can reduce quality and selling value.\n\n2. Handle Products Carefully\nPoor handling can cause bruising, breaking, contamination, or other damage. Use suitable containers and avoid unnecessary dropping or rough handling.\n\n3. Improve Storage\nUse storage conditions suitable for your product. Consider: ● Temperature ● Moisture ● Ventilation ● Cleanliness ● Protection from pests\n\n4. Plan Transportation\nAvoid unnecessary delays between harvesting and selling. Transport products using suitable packaging and vehicles where necessary.\n\n5. Know Your Market Timing\nDo not harvest large quantities without a sales plan. Coordinate production, harvesting, storage, transportation, and sales as much as possible.\n\n6. Track Your Losses\nRecord how much product is: ● Harvested ● Sold ● Damaged ● Spoiled ● Used or discarded This helps you identify where losses are occurring.\n\nFarmReady Tip 🌱\nReducing losses is another way of increasing farm income. You do not always need to produce more—you can also keep more of what you already produce.",
+  },
+  {
+    id: "farm-to-market-logistics",
+    title: "How to Plan Farm-to-Market Logistics",
+    category: "Market & Sales",
+    readTime: "2 min read",
+    summary: "Farm-to-market logistics is the process of moving your products from the farm to the buyer.",
+    keyTakeaways: ["Transport costs", "Delivery time", "Fuel costs"],
+    content: "Farm-to-market logistics is the process of moving your products from the farm to the buyer. Poor planning can increase costs, delay sales, damage products, and reduce profit.\n\n1. Know Where Your Buyers Are\nIdentify where your main buyers are located and how far the farm is from them. Distance affects: ● Transport costs ● Delivery time ● Fuel costs ● Product condition\n\n2. Choose the Right Transport\nChoose transportation based on the type and quantity of products you are moving. Consider: ● Vehicle capacity ● Travel distance ● Road conditions ● Delivery time ● Product handling requirements\n\n3. Calculate Transport Costs\nInclude transportation in your farm budget. Consider: Transport Cost = Vehicle/Freight Cost + Fuel + Loading/Unloading + Other Delivery Costs Do not calculate your selling price without considering the cost of getting the product to the buyer.\n\n4. Plan Harvest and Delivery Together\nYour harvest schedule should match your buyer's delivery requirements. Avoid harvesting large quantities significantly earlier than they can be sold unless you have suitable storage.\n\n5. Plan for Road and Weather Problems\nConsider what could happen if: ● Roads become difficult to use ● Heavy rain delays transportation ● A vehicle breaks down ● Delivery takes longer than expected Have alternative arrangements where practical.\n\n6. Compare Different Delivery Options\nFor larger operations, compare the cost of: ● Hiring transport ● Using your own vehicle ● Working with other farmers ● Delivering directly to buyers ● Using a distributor Choose based on total cost and reliability, not just the cheapest option.\n\nFarmReady Tip 🌱\nA farm is not fully connected to the market until you know how the product will get from the farm to the buyer.",
+  },
 ];
