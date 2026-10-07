@@ -32,8 +32,8 @@ export function calculateFinancialMetrics(project: FarmProject): FinancialMetric
   const mkt = project.marketPlan;
   const cost = (amount: number | null | undefined) => Math.max(0, Number(amount) || 0);
   // A lease is an annual operating commitment, while a purchase is an initial investment.
-  const annualLeaseCost = project.farmDetails?.landStatus === 'lease_partner' ? Math.max(0, fin.landRentPurchase || 0) : 0;
-  const upfrontLandCost = project.farmDetails?.landStatus === 'lease_partner' ? 0 : Math.max(0, fin.landRentPurchase || 0);
+  const annualLeaseCost = cost(fin.landRentLeaseCost);
+  const upfrontLandCost = cost(fin.landPurchaseCost);
 
   // Initial investment: land + equipment + infrastructure + initial working capital buffer.
   const totalStartupCapital = 
@@ -41,7 +41,12 @@ export function calculateFinancialMetrics(project: FarmProject): FinancialMetric
     cost(fin.landPreparation) +
     cost(fin.equipmentMachinery) +
     cost(fin.infrastructureSetup) +
-    cost(fin.initialInputs) +
+    cost(fin.animalPenCost) +
+    cost(fin.storageShedCost) +
+    cost(fin.startupSeedsCost) +
+    cost(fin.startupSeedlingsCost) +
+    cost(fin.startupAnimalsCost) +
+    cost(fin.startupFingerlingsCost) +
     cost(fin.initialLabour) +
     cost(fin.otherStartupCosts) +
     cost(fin.startupContingency) +
@@ -51,11 +56,31 @@ export function calculateFinancialMetrics(project: FarmProject): FinancialMetric
   const baseOperating = 
     cost(fin.labourCost) +
     cost(fin.inputsCost) +
+    cost(fin.seedCost) +
+    cost(fin.seedlingsCost) +
+    cost(fin.fertilizerCost) +
+    cost(fin.manureCost) +
+    cost(fin.pesticidesCost) +
+    cost(fin.herbicidesCost) +
+    cost(fin.feedCost) +
+    cost(fin.fishFeedCost) +
+    cost(fin.medicineCost) +
+    cost(fin.vaccineCost) +
+    cost(fin.fuelCost) +
     cost(fin.transportCost) +
     cost(fin.utilitiesCost) +
+    cost(fin.electricityCost) +
+    cost(fin.waterCost) +
+    cost(fin.irrigationCost) +
     cost(fin.maintenanceCost) +
     cost(fin.packagingStorageCost) +
-    cost(fin.insuranceContingencyCost);
+    cost(fin.harvestingCost) +
+    cost(fin.processingCost) +
+    cost(fin.marketFeesCost) +
+    cost(fin.sellingAgentFeesCost) +
+    cost(fin.securityCost) +
+    cost(fin.insuranceContingencyCost) +
+    cost(fin.miscellaneousCost);
 
   // Custom expenses
   const customAnnual = (fin.customExpenses || []).reduce((acc, item) => {
@@ -80,7 +105,7 @@ export function calculateFinancialMetrics(project: FarmProject): FinancialMetric
 
   // Direct Input / Variable costs vs Fixed Costs estimation:
   // Inputs, packaging, transport are considered variable; equipment, land rent, management/permanent labour considered fixed.
-  const variableCosts = cost(fin.inputsCost) + cost(fin.transportCost) + cost(fin.packagingStorageCost);
+  const variableCosts = cost(fin.inputsCost) + cost(fin.seedCost) + cost(fin.seedlingsCost) + cost(fin.fertilizerCost) + cost(fin.manureCost) + cost(fin.pesticidesCost) + cost(fin.herbicidesCost) + cost(fin.feedCost) + cost(fin.fishFeedCost) + cost(fin.medicineCost) + cost(fin.vaccineCost) + cost(fin.transportCost) + cost(fin.fuelCost) + cost(fin.packagingStorageCost) + cost(fin.harvestingCost) + cost(fin.processingCost) + cost(fin.marketFeesCost) + cost(fin.sellingAgentFeesCost) + cost(fin.irrigationCost);
   const fixedCosts = Math.max(0, annualOperatingExpenses - variableCosts);
 
   const grossProfit = expectedRevenue - variableCosts;
@@ -243,7 +268,7 @@ export function computeScenarios(project: FarmProject) {
   const scenarios = project.scenarios;
   const cycles = Math.max(0, Math.floor(project.productionPlan.cyclesPerYear || 0));
   const annualBuyerDemand = Math.max(0, project.marketPlan.expectedPurchaseVolumePerCycle || 0) * cycles;
-  const variableAnnualCosts = Math.max(0, fin.inputsCost || 0) + Math.max(0, fin.transportCost || 0) + Math.max(0, fin.packagingStorageCost || 0);
+  const variableAnnualCosts = Math.max(0, fin.inputsCost || 0) + Math.max(0, fin.seedCost || 0) + Math.max(0, fin.seedlingsCost || 0) + Math.max(0, fin.fertilizerCost || 0) + Math.max(0, fin.manureCost || 0) + Math.max(0, fin.pesticidesCost || 0) + Math.max(0, fin.herbicidesCost || 0) + Math.max(0, fin.feedCost || 0) + Math.max(0, fin.fishFeedCost || 0) + Math.max(0, fin.medicineCost || 0) + Math.max(0, fin.vaccineCost || 0) + Math.max(0, fin.transportCost || 0) + Math.max(0, fin.fuelCost || 0) + Math.max(0, fin.packagingStorageCost || 0) + Math.max(0, fin.harvestingCost || 0) + Math.max(0, fin.processingCost || 0) + Math.max(0, fin.marketFeesCost || 0) + Math.max(0, fin.sellingAgentFeesCost || 0) + Math.max(0, fin.irrigationCost || 0);
   const variableCostPerUnit = baseMetrics.expectedAnnualQuantity > 0 ? variableAnnualCosts / baseMetrics.expectedAnnualQuantity : 0;
   const fixedAnnualCosts = Math.max(0, baseMetrics.annualOperatingExpenses - variableAnnualCosts);
 
@@ -297,8 +322,8 @@ export function computeWhatIf(project: FarmProject, whatIfDeltas: FarmProject['w
   const simulatedRevenue = Math.round(Math.min(simulatedProduction, buyerDemand) * project.marketPlan.expectedSellingPrice * Math.max(0, priceMultiplier));
   
   const producedRatio = base.expectedAnnualQuantity > 0 ? simulatedProduction / base.expectedAnnualQuantity : 0;
-  const variableTransportPackaging = Math.max(0, fin.transportCost || 0) + Math.max(0, fin.packagingStorageCost || 0);
-  const updatedInputs = Math.max(0, fin.inputsCost || 0) * inputCostMultiplier * producedRatio;
+  const variableTransportPackaging = Math.max(0, fin.transportCost || 0) + Math.max(0, fin.fuelCost || 0) + Math.max(0, fin.packagingStorageCost || 0) + Math.max(0, fin.harvestingCost || 0) + Math.max(0, fin.processingCost || 0) + Math.max(0, fin.marketFeesCost || 0) + Math.max(0, fin.sellingAgentFeesCost || 0);
+  const updatedInputs = (Math.max(0, fin.inputsCost || 0) + Math.max(0, fin.seedCost || 0) + Math.max(0, fin.seedlingsCost || 0) + Math.max(0, fin.fertilizerCost || 0) + Math.max(0, fin.manureCost || 0) + Math.max(0, fin.pesticidesCost || 0) + Math.max(0, fin.herbicidesCost || 0) + Math.max(0, fin.feedCost || 0) + Math.max(0, fin.fishFeedCost || 0) + Math.max(0, fin.medicineCost || 0) + Math.max(0, fin.vaccineCost || 0)) * inputCostMultiplier * producedRatio;
   const baseLabour = Math.max(0, fin.labourCost || 0);
   const updatedLabour = baseLabour * labourCostMultiplier;
   const fixedCosts = Math.max(0, base.annualOperatingExpenses - base.annualVariableCosts);

@@ -251,8 +251,11 @@ export const ScenarioAnalysisView: React.FC = () => {
                   Expected Yield ({unit})
                 </label>
                 <input
-                  type="number"
-                  value={editYield}
+                  type="number" placeholder="Enter value"
+                  min="0"
+                  step="any"
+                  onKeyDown={event => { if (['e', 'E', '+', '-'].includes(event.key)) event.preventDefault(); }}
+                  value={editYield || ''}
                   onChange={(e) => setEditYield(parseFloat(e.target.value) || 0)}
                   className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-sm font-mono"
                 />
@@ -263,8 +266,11 @@ export const ScenarioAnalysisView: React.FC = () => {
                   Selling Price per {unit} (₦)
                 </label>
                 <input
-                  type="number"
-                  value={editPrice}
+                  type="number" placeholder="Enter value"
+                  min="0"
+                  step="any"
+                  onKeyDown={event => { if (['e', 'E', '+', '-'].includes(event.key)) event.preventDefault(); }}
+                  value={editPrice || ''}
                   onChange={(e) => setEditPrice(parseFloat(e.target.value) || 0)}
                   className="w-full px-3 py-2 rounded-xl border border-neutral-300 text-sm font-mono"
                 />

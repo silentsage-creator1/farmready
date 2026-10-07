@@ -1,7 +1,9 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
-import { FarmProject, InventoryItem } from '../types';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { FarmProject, InventoryItem, InventoryMovement } from '../types';
 import { emptyProject } from '../data/demoProject';
 import { calculateFinancialMetrics } from '../utils/calculations';
+import { useAuth } from './AuthContext';
+import { supabase } from '../lib/supabase';
 
 export type AppView = 
   | 'landing'
@@ -23,6 +25,7 @@ export type AppView =
   | 'reports_archive'
   | 'resources'
   | 'profile'
+  | 'team_access'
   | 'settings'
   | 'help';
 
@@ -60,7 +63,7 @@ const VIEW_PATHS: Record<AppView, string> = {
   cash_flow: '/cash-flow', investment_analysis: '/investment-analysis', scenarios: '/scenarios',
   what_if: '/what-if-simulator', risk_analysis: '/risk-analysis', report: '/readiness-report', tools: '/tools',
   inventory: '/inventory', reports_archive: '/saved-reports', resources: '/resources', profile: '/profile',
-  settings: '/settings', help: '/help',
+  team_access: '/team-access', settings: '/settings', help: '/help',
 };
 
 const PATH_VIEWS = Object.fromEntries(Object.entries(VIEW_PATHS).map(([view, path]) => [path, view])) as Record<string, AppView>;
@@ -72,7 +75,7 @@ interface FarmProjectContextType {
   currentProject: FarmProject;
   allProjects: FarmProject[];
   selectProject: (id: string) => void;
-  updateCurrentProject: (updates: Partial<FarmProject>) => void;
+  updateCurrentProject: (updates: Partial<FarmProject>) => boolean;
   updateWhatIf: (deltas: Partial<FarmProject['whatIf']>) => void;
   resetWhatIf: () => void;
   createNewAssessment: (farmType?: FarmProject['farmType']) => void;
@@ -82,6 +85,7 @@ interface FarmProjectContextType {
   inventoryItems: InventoryItem[];
   addInventoryItem: (item: Omit<InventoryItem, 'id'>) => void;
   updateInventoryItem: (id: string, updates: Partial<InventoryItem>) => void;
+  recordInventoryMovement: (id: string, movement: Omit<InventoryMovement, 'id'>) => void;
   deleteInventoryItem: (id: string) => void;
   savedReports: SavedReportItem[];
   deleteSavedReport: (id: string) => void;
@@ -99,6 +103,12 @@ interface FarmProjectContextType {
   updateAppPreferences: (preferences: Partial<AppPreferences>) => void;
   createWorkspaceBackup: () => string;
   restoreWorkspaceBackup: (backup: string) => void;
+  cloudSyncError: string;
+  cloudSyncLoading: boolean;
+  requiresSignIn: boolean;
+  currentProjectIsOwner: boolean;
+  currentProjectPermissions: string[];
+  currentProjectAccessKnown: boolean;
   isMobileNavOpen: boolean;
   setIsMobileNavOpen: (open: boolean) => void;
 }
@@ -153,9 +163,38 @@ function normalizeProject(project: FarmProject): FarmProject {
     financialModel: {
       ...emptyProject.financialModel,
       ...(project.financialModel ?? {}),
+      landPurchaseCost: project.financialModel?.landPurchaseCost ?? (project.farmDetails?.landStatus === 'lease_partner' ? 0 : project.financialModel?.landRentPurchase ?? 0),
+      landRentLeaseCost: project.financialModel?.landRentLeaseCost ?? (project.farmDetails?.landStatus === 'lease_partner' ? project.financialModel?.landRentPurchase ?? 0 : 0),
+      startupSeedsCost: project.financialModel?.startupSeedsCost ?? (project.farmType?.toLowerCase().includes('fish') || project.farmType?.toLowerCase().includes('livestock') || project.farmType?.toLowerCase().includes('poultry') ? 0 : project.financialModel?.initialInputs ?? 0),
+      startupSeedlingsCost: project.financialModel?.startupSeedlingsCost ?? 0,
+      startupAnimalsCost: project.financialModel?.startupAnimalsCost ?? (project.farmType?.toLowerCase().includes('livestock') || project.farmType?.toLowerCase().includes('poultry') ? project.financialModel?.initialInputs ?? 0 : 0),
+      startupFingerlingsCost: project.financialModel?.startupFingerlingsCost ?? (project.farmType?.toLowerCase().includes('fish') ? project.financialModel?.initialInputs ?? 0 : 0),
+      initialInputs: 0,
       initialLabour: project.financialModel?.initialLabour ?? 0,
       otherStartupCosts: project.financialModel?.otherStartupCosts ?? 0,
       startupContingency: project.financialModel?.startupContingency ?? 0,
+      seedCost: project.financialModel?.seedCost ?? 0,
+      seedlingsCost: project.financialModel?.seedlingsCost ?? 0,
+      fertilizerCost: project.financialModel?.fertilizerCost ?? 0,
+      manureCost: project.financialModel?.manureCost ?? 0,
+      pesticidesCost: project.financialModel?.pesticidesCost ?? 0,
+      herbicidesCost: project.financialModel?.herbicidesCost ?? 0,
+      feedCost: project.financialModel?.feedCost ?? 0,
+      fishFeedCost: project.financialModel?.fishFeedCost ?? 0,
+      medicineCost: project.financialModel?.medicineCost ?? 0,
+      vaccineCost: project.financialModel?.vaccineCost ?? 0,
+      fuelCost: project.financialModel?.fuelCost ?? 0,
+      electricityCost: project.financialModel?.electricityCost ?? 0,
+      waterCost: project.financialModel?.waterCost ?? 0,
+      irrigationCost: project.financialModel?.irrigationCost ?? 0,
+      harvestingCost: project.financialModel?.harvestingCost ?? 0,
+      processingCost: project.financialModel?.processingCost ?? 0,
+      marketFeesCost: project.financialModel?.marketFeesCost ?? 0,
+      sellingAgentFeesCost: project.financialModel?.sellingAgentFeesCost ?? 0,
+      animalPenCost: project.financialModel?.animalPenCost ?? 0,
+      storageShedCost: project.financialModel?.storageShedCost ?? 0,
+      securityCost: project.financialModel?.securityCost ?? 0,
+      miscellaneousCost: project.financialModel?.miscellaneousCost ?? 0,
       maxAffordableLoss: project.financialModel?.maxAffordableLoss ?? null,
       monthsUntilPositiveCashFlow: project.financialModel?.monthsUntilPositiveCashFlow ?? null,
       financing: { ...emptyProject.financialModel.financing, ...(project.financialModel?.financing ?? {}) },
@@ -169,7 +208,41 @@ function normalizeProject(project: FarmProject): FarmProject {
   };
 }
 
+function buildPatch(previous: unknown, next: unknown): unknown {
+  if (JSON.stringify(previous) === JSON.stringify(next)) return undefined;
+  if (previous && next && typeof previous === 'object' && typeof next === 'object' && !Array.isArray(previous) && !Array.isArray(next)) {
+    const patch: Record<string, unknown> = {};
+    for (const key of new Set([...Object.keys(previous), ...Object.keys(next)])) {
+      const value = buildPatch((previous as Record<string, unknown>)[key], (next as Record<string, unknown>)[key]);
+      if (value !== undefined) patch[key] = value;
+    }
+    return patch;
+  }
+  return next;
+}
+
+function changedPatchPaths(previous: unknown, patch: unknown, path = ''): string[] {
+  if (patch && typeof patch === 'object' && !Array.isArray(patch)) {
+    return Object.entries(patch as Record<string, unknown>).flatMap(([key, value]) => changedPatchPaths((previous as Record<string, unknown> | null)?.[key], value, path ? `${path}.${key}` : key));
+  }
+  return JSON.stringify(previous) === JSON.stringify(patch) ? [] : [path];
+}
+
+function permissionNeededForChange(path: string): string | null {
+  const [root, child] = path.split('.');
+  if (['id', 'name', 'farmType', 'stage', 'progress'].includes(root)) return 'assessment.edit';
+  if (root === 'farmDetails') return ['dailyManager', 'managementResponsibilities', 'farmingExperience'].includes(child) ? 'people.edit' : 'infrastructure.edit';
+  if (root === 'marketPlan') return 'market.edit';
+  if (root === 'productionPlan') return 'production.edit';
+  if (root === 'financialModel' || root === 'scenarios' || root === 'whatIf') return 'financial.edit';
+  if (root === 'recordKeepingPlan') return 'information.edit';
+  if (root === 'risks' || root === 'exitRedesignExpansion') return 'risk.edit';
+  if (root === 'toolAnalysis') return child === 'risk' ? 'risk.edit' : child === 'production' ? 'production.edit' : 'financial.edit';
+  return null;
+}
+
 export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { session, loading: authLoading } = useAuth();
   const [activeView, setActiveViewState] = useState<AppView>(readRoute);
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
   const [activeReportAction, setActiveReportAction] = useState<'download' | 'print' | null>(null);
@@ -288,8 +361,105 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     return [];
   });
 
+  const [cloudSyncError, setCloudSyncError] = useState('');
+  const [cloudSyncLoading, setCloudSyncLoading] = useState(true);
+  const [cloudAccessByProject, setCloudAccessByProject] = useState<Record<string, { isOwner: boolean; permissions: string[] }>>({});
+  const cloudHydratedUserId = useRef<string | null>(null);
+  const lastSyncedWorkspace = useRef<Record<string, { project: FarmProject; inventory: InventoryItem[]; reports: SavedReportItem[] }>>({});
+  const [requiresSignIn, setRequiresSignIn] = useState(() => Boolean(localStorage.getItem('farmready_cloud_owner_v1')));
+  const currentProjectAccess = cloudAccessByProject[currentProject.id];
+  const currentProjectIsOwner = currentProjectAccess?.isOwner === true;
+  const currentProjectPermissions = currentProjectAccess?.permissions ?? [];
+  const latestWorkspace = useRef({ projects: allProjects, inventory: inventoryByProject, reports: savedReports });
+  latestWorkspace.current = { projects: allProjects, inventory: inventoryByProject, reports: savedReports };
+
+  useEffect(() => {
+    if (authLoading) return;
+    const userId = session?.user.id;
+    const supabaseClient = supabase;
+    let cancelled = false;
+    if (!userId || !supabaseClient) {
+      if (!userId && localStorage.getItem('farmready_cloud_owner_v1')) {
+        cloudHydratedUserId.current = null;
+        setRequiresSignIn(true);
+        setAllProjects([]);
+        setInventoryByProject({});
+        setSavedReports([]);
+        setCurrentProjectId(emptyProject.id);
+        setCloudAccessByProject({});
+      }
+      setCloudSyncLoading(false);
+      return () => { cancelled = true; };
+    }
+
+    const hydrate = async () => {
+      setCloudSyncLoading(true);
+      setCloudSyncError('');
+      try {
+        const { data: sessionData, error: sessionError } = await supabaseClient.auth.getSession();
+        if (sessionError || !sessionData.session?.access_token) throw new Error('Your session has expired. Sign in again.');
+        const headers = { Authorization: `Bearer ${sessionData.session.access_token}` };
+        const response = await fetch('/api/team/projects', { headers });
+        const payload = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(payload.error || 'Could not load your farms from shared storage.');
+        type CloudProject = { id: string; name: string; farmType: FarmProject['farmType']; data?: { project?: FarmProject; inventory?: InventoryItem[]; reports?: SavedReportItem[] }; isOwner?: boolean; permissions?: string[] };
+        let cloudProjects: CloudProject[] = Array.isArray(payload.projects) ? payload.projects : [];
+        const previousOwnerId = localStorage.getItem('farmready_cloud_owner_v1');
+        const legacyProjects = latestWorkspace.current.projects;
+
+        for (const cloudProject of cloudProjects) {
+          const legacyProject = legacyProjects.find(project => project.id === cloudProject.id);
+          if (!cloudProject.isOwner || cloudProject.data?.project?.id || !legacyProject || (previousOwnerId && previousOwnerId !== userId)) continue;
+          const inventory = latestWorkspace.current.inventory[legacyProject.id] ?? [];
+          const reports = latestWorkspace.current.reports.filter(report => report.projectId === legacyProject.id);
+          const upgrade = await fetch('/api/team/projects', { method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' }, body: JSON.stringify({ project: legacyProject, inventory, reports }) });
+          if (!upgrade.ok) throw new Error(`Could not move “${legacyProject.name}” into shared storage.`);
+          cloudProject.data = { project: legacyProject, inventory, reports };
+        }
+
+        if (cloudProjects.length === 0 && legacyProjects.length > 0 && (!previousOwnerId || previousOwnerId === userId)) {
+          const migrated: CloudProject[] = [];
+          for (const project of legacyProjects) {
+            const migration = await fetch('/api/team/projects', {
+              method: 'POST', headers: { ...headers, 'Content-Type': 'application/json' },
+              body: JSON.stringify({ project, inventory: latestWorkspace.current.inventory[project.id] ?? [], reports: latestWorkspace.current.reports.filter(report => report.projectId === project.id) }),
+            });
+            if (!migration.ok) {
+              const migrationError = await migration.json().catch(() => ({}));
+              throw new Error(migrationError.error || `Could not move “${project.name}” into your account.`);
+            }
+            migrated.push({ id: project.id, name: project.name, farmType: project.farmType, data: { project, inventory: latestWorkspace.current.inventory[project.id] ?? [], reports: latestWorkspace.current.reports.filter(report => report.projectId === project.id) }, isOwner: true, permissions: [] });
+          }
+          cloudProjects = migrated;
+        }
+        if (cancelled) return;
+
+        const projects = cloudProjects.map((entry: { id: string; name: string; farmType: FarmProject['farmType']; data?: { project?: FarmProject; inventory?: InventoryItem[]; reports?: SavedReportItem[] }; isOwner?: boolean }) => normalizeProject({ ...emptyProject, ...(entry.data?.project ?? {}), id: entry.id, name: entry.name, farmType: entry.farmType }));
+        const projectIds = new Set(projects.map(project => project.id));
+        const nextInventory = Object.fromEntries(cloudProjects.map((entry: { id: string; data?: { inventory?: InventoryItem[] } }) => [entry.id, entry.data?.inventory ?? []]));
+        const nextReports = cloudProjects.flatMap((entry: { id: string; data?: { reports?: SavedReportItem[] } }) => (entry.data?.reports ?? []).map(report => ({ ...report, projectId: report.projectId || entry.id })));
+        lastSyncedWorkspace.current = Object.fromEntries(projects.map(project => [project.id, { project, inventory: nextInventory[project.id] ?? [], reports: nextReports.filter(report => report.projectId === project.id) }]));
+        setAllProjects(projects);
+        setInventoryByProject(nextInventory);
+        setSavedReports(nextReports);
+        setCurrentProjectId(previous => projectIds.has(previous) ? previous : projects[0]?.id ?? emptyProject.id);
+        setCloudAccessByProject(Object.fromEntries(cloudProjects.map((entry: { id: string; isOwner?: boolean; permissions?: string[] }) => [entry.id, { isOwner: entry.isOwner === true, permissions: entry.permissions ?? [] }])));
+        localStorage.setItem('farmready_cloud_owner_v1', userId);
+        setRequiresSignIn(true);
+        cloudHydratedUserId.current = userId;
+      } catch (error) {
+        if (!cancelled) setCloudSyncError(error instanceof Error ? error.message : 'Could not load shared farm data.');
+      } finally {
+        if (!cancelled) setCloudSyncLoading(false);
+      }
+    };
+    void hydrate();
+    return () => { cancelled = true; };
+  }, [authLoading, session?.user.id]);
+
   // Sync to local storage
   useEffect(() => {
+    if (cloudSyncLoading) return;
     try {
       localStorage.setItem(STORAGE_KEY_PROJECTS, JSON.stringify(allProjects));
       if (allProjects.length) localStorage.setItem(STORAGE_KEY_ACTIVE_ID, currentProject.id);
@@ -297,15 +467,16 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     } catch (e) {
       console.warn('Storage save failed:', e);
     }
-  }, [allProjects, currentProject.id]);
+  }, [allProjects, currentProject.id, cloudSyncLoading]);
 
   useEffect(() => {
+    if (cloudSyncLoading) return;
     try {
       localStorage.setItem(STORAGE_KEY_INVENTORY, JSON.stringify(inventoryByProject));
     } catch (e) {
       console.warn('Inventory storage save failed:', e);
     }
-  }, [inventoryByProject]);
+  }, [inventoryByProject, cloudSyncLoading]);
 
   useEffect(() => {
     try { localStorage.setItem('farmready_profile_v1', JSON.stringify(userProfile)); } catch { /* storage may be unavailable */ }
@@ -316,14 +487,64 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   }, [appPreferences]);
 
   useEffect(() => {
+    if (cloudSyncLoading) return;
     try { localStorage.setItem('farmready_reports_v1', JSON.stringify(savedReports)); } catch { /* storage may be unavailable */ }
-  }, [savedReports]);
+  }, [savedReports, cloudSyncLoading]);
+
+  useEffect(() => {
+    const userId = session?.user.id;
+    if (!userId || cloudSyncLoading || cloudHydratedUserId.current !== userId || !allProjects.length) return;
+    const timer = window.setTimeout(async () => {
+      try {
+        const { data: sessionData, error: sessionError } = await supabase!.auth.getSession();
+        if (sessionError || !sessionData.session?.access_token) throw new Error('Sign in again to sync farm changes.');
+        const headers = { Authorization: `Bearer ${sessionData.session.access_token}`, 'Content-Type': 'application/json' };
+        for (const project of allProjects) {
+          const data = { project, inventory: inventoryByProject[project.id] ?? [], reports: savedReports.filter(report => report.projectId === project.id) };
+          const knownOwner = cloudAccessByProject[project.id]?.isOwner;
+          const previous = lastSyncedWorkspace.current[project.id];
+          const patch: Record<string, unknown> = {};
+          if (previous) {
+            const projectPatch = buildPatch(previous.project, project);
+            const inventoryPatch = buildPatch(previous.inventory, data.inventory);
+            const reportsPatch = buildPatch(previous.reports, data.reports);
+            if (projectPatch && Object.keys(projectPatch as object).length) patch.project = projectPatch;
+            if (inventoryPatch !== undefined) patch.inventory = inventoryPatch;
+            if (reportsPatch !== undefined) patch.reports = reportsPatch;
+            if (!Object.keys(patch).length) continue;
+          }
+          const response = await fetch('/api/team/projects', {
+            method: knownOwner === false ? 'PATCH' : 'POST', headers,
+            body: JSON.stringify(knownOwner === false ? { projectId: project.id, patch: patch } : data),
+          });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(payload.error || `Could not sync “${project.name}”.`);
+          if (knownOwner !== false) setCloudAccessByProject(previous => ({ ...previous, [project.id]: { isOwner: true, permissions: previous[project.id]?.permissions ?? [] } }));
+          const skipped = new Set<string>(payload.skippedSections ?? []);
+          lastSyncedWorkspace.current[project.id] = {
+            project: previous && skipped.size ? (skipped.has('assessment') || skipped.has('market') || skipped.has('production') || skipped.has('financial') || skipped.has('people') || skipped.has('information') || skipped.has('infrastructure') || skipped.has('risk') ? previous.project : project) : project,
+            inventory: skipped.has('inventory') ? previous?.inventory ?? [] : data.inventory,
+            reports: skipped.has('reports') ? previous?.reports ?? [] : data.reports,
+          };
+          if (payload.skippedSections?.length) setCloudSyncError(`Some changes to ${payload.skippedSections.join(', ')} were not saved because this account lacks permission.`);
+          else setCloudSyncError('');
+        }
+      } catch (error) {
+        setCloudSyncError(error instanceof Error ? error.message : 'Could not sync your changes.');
+      }
+    }, 700);
+    return () => window.clearTimeout(timer);
+  }, [allProjects, inventoryByProject, savedReports, cloudSyncLoading, session?.user.id, cloudAccessByProject]);
 
   const activeReport = savedReports.find(report => report.id === activeReportId)?.projectSnapshot ?? null;
   const activeReportInventory = savedReports.find(report => report.id === activeReportId)?.inventorySnapshot ?? [];
   const activeReportEvaluator = savedReports.find(report => report.id === activeReportId)?.evaluatorName ?? null;
   const activeReportGeneratedAt = savedReports.find(report => report.id === activeReportId)?.date ?? null;
   const saveCurrentReport = (snapshot = currentProject) => {
+    if (session && cloudAccessByProject[snapshot.id]?.isOwner === false) {
+      setCloudSyncError('Only the farm owner can save a readiness report to this farm.');
+      return;
+    }
     const metrics = calculateFinancialMetrics(snapshot);
     const report: SavedReportItem = {
       id: `report-${snapshot.id}-${Date.now()}`,
@@ -351,6 +572,11 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   const clearActiveReportAction = () => setActiveReportAction(null);
 
   const deleteSavedReport = (id: string) => {
+    const report = savedReports.find(item => item.id === id);
+    if (session && report && cloudAccessByProject[report.projectId]?.isOwner === false) {
+      setCloudSyncError('Only the farm owner can remove a saved report.');
+      return;
+    }
     setSavedReports(previous => previous.filter(report => report.id !== id));
     if (activeReportId === id) setActiveReportId(null);
   };
@@ -361,6 +587,20 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const updateCurrentProject = (updates: Partial<FarmProject>) => {
+    if (!allProjects.some(project => project.id === currentProject.id)) {
+      setCloudSyncError('Create or select a farm assessment before saving changes.');
+      return false;
+    }
+    if (session && currentProjectAccess && !currentProjectAccess.isOwner) {
+      const unauthorized = changedPatchPaths(currentProject, updates).filter(path => {
+        const needed = permissionNeededForChange(path);
+        return !needed || !currentProjectAccess.permissions.includes(needed);
+      });
+      if (unauthorized.length) {
+        setCloudSyncError('Your access does not allow changing this part of the farm. Ask the owner to update your permissions.');
+        return false;
+      }
+    }
     setAllProjects(prev => prev.map(p => {
       if (p.id === currentProject.id) {
         return {
@@ -371,6 +611,7 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
       }
       return p;
     }));
+    return true;
   };
 
   const updateWhatIf = (deltas: Partial<FarmProject['whatIf']>) => {
@@ -394,7 +635,7 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const createNewAssessment = (farmType: FarmProject['farmType'] = 'Crop Production') => {
-    const newId = `project-${Date.now()}`;
+    const newId = `project-${crypto.randomUUID()}`;
     const newProj: FarmProject = {
       id: newId,
     name: 'Untitled Assessment',
@@ -449,21 +690,49 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
         maxAffordableLoss: null,
         monthsUntilPositiveCashFlow: null,
         landRentPurchase: 0,
+        landPurchaseCost: 0,
+        landRentLeaseCost: 0,
         landPreparation: 0,
         equipmentMachinery: 0,
         infrastructureSetup: 0,
         initialInputs: 0,
+        startupSeedsCost: 0,
+        startupSeedlingsCost: 0,
+        startupAnimalsCost: 0,
+        startupFingerlingsCost: 0,
         initialWorkingCapital: 0,
         initialLabour: 0,
         otherStartupCosts: 0,
         startupContingency: 0,
         labourCost: 0,
         inputsCost: 0,
+        seedCost: 0,
+        seedlingsCost: 0,
+        fertilizerCost: 0,
+        manureCost: 0,
+        pesticidesCost: 0,
+        herbicidesCost: 0,
+        feedCost: 0,
+        fishFeedCost: 0,
+        medicineCost: 0,
+        vaccineCost: 0,
+        fuelCost: 0,
         transportCost: 0,
         utilitiesCost: 0,
+        electricityCost: 0,
+        waterCost: 0,
+        irrigationCost: 0,
         maintenanceCost: 0,
         packagingStorageCost: 0,
+        harvestingCost: 0,
+        processingCost: 0,
+        marketFeesCost: 0,
+        sellingAgentFeesCost: 0,
+        animalPenCost: 0,
+        storageShedCost: 0,
+        securityCost: 0,
         insuranceContingencyCost: 0,
+        miscellaneousCost: 0,
         customExpenses: [],
         financing: {
           hasLoan: false,
@@ -507,6 +776,20 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const deleteProject = (id: string) => {
+    if (cloudAccessByProject[id]?.isOwner === false) {
+      setCloudSyncError('Only the farm owner can delete this project.');
+      return;
+    }
+    if (session && cloudAccessByProject[id]?.isOwner) {
+      void (async () => {
+        try {
+          const { data } = await supabase!.auth.getSession();
+          const response = await fetch('/api/team/projects', { method: 'DELETE', headers: { Authorization: `Bearer ${data.session?.access_token ?? ''}`, 'Content-Type': 'application/json' }, body: JSON.stringify({ projectId: id }) });
+          const payload = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(payload.error || 'Could not delete the shared project.');
+        } catch (error) { setCloudSyncError(error instanceof Error ? error.message : 'Could not delete the shared project.'); }
+      })();
+    }
     const remaining = allProjects.filter(p => p.id !== id);
     const deletedReportIds = new Set(savedReports.filter(report => report.projectId === id).map(report => report.id));
     setAllProjects(remaining);
@@ -522,7 +805,7 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     if (!src) return;
     const duplicated: FarmProject = {
       ...JSON.parse(JSON.stringify(src)),
-      id: `copy-${Date.now()}`,
+      id: `project-${crypto.randomUUID()}`,
       name: `${src.name} (Copy)`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -533,6 +816,11 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const clearAssessments = () => {
+    if (allProjects.some(project => cloudAccessByProject[project.id]?.isOwner === false)) {
+      setCloudSyncError('Only the farm owner can clear a shared project. Remove or switch shared farms individually.');
+      return;
+    }
+    if (session) for (const project of allProjects) if (cloudAccessByProject[project.id]?.isOwner) deleteProject(project.id);
     setAllProjects([]);
     setCurrentProjectId(emptyProject.id);
     setInventoryByProject({});
@@ -549,7 +837,14 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
     setInventoryByProject(previous => ({ ...previous, [currentProject.id]: update(previous[currentProject.id] ?? []) }));
   };
 
+  const canChangeInventory = (permission: string) => {
+    if (!session) return true;
+    const access = cloudAccessByProject[currentProject.id];
+    return !access || access.isOwner || access.permissions.includes(permission);
+  };
+
   const addInventoryItem = (item: Omit<InventoryItem, 'id'>) => {
+    if (!canChangeInventory('inventory.catalog.edit')) { setCloudSyncError('Your access does not allow adding inventory items. Ask the owner to update your permissions.'); return; }
     const newItem: InventoryItem = {
       ...item,
       id: `inv-${Date.now()}`,
@@ -558,10 +853,40 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
   };
 
   const updateInventoryItem = (id: string, updates: Partial<InventoryItem>) => {
+    const permission = 'status' in updates || 'quantity' in updates ? 'inventory.adjust' : 'inventory.catalog.edit';
+    if (!canChangeInventory(permission)) { setCloudSyncError('Your access does not allow that inventory update. Ask the owner to update your permissions.'); return; }
     updateProjectInventory(prev => prev.map(item => item.id === id ? { ...item, ...updates } : item));
   };
 
+  const recordInventoryMovement = (id: string, movement: Omit<InventoryMovement, 'id'>) => {
+    const permission = movement.type === 'Purchase' ? 'inventory.purchase.record' : movement.type === 'Usage' || movement.type === 'Sale' ? 'inventory.usage.record' : movement.type === 'Loss' ? 'inventory.loss.record' : 'inventory.adjust';
+    if (!canChangeInventory(permission)) { setCloudSyncError('Your access does not allow recording this inventory movement. Ask the owner to update your permissions.'); return; }
+    updateProjectInventory(prev => prev.map(item => {
+      if (item.id !== id) return item;
+      const quantity = Math.max(0, Number(movement.quantity) || 0);
+      const nextQuantity = movement.type === 'Adjustment'
+        ? quantity
+        : Math.max(0, item.quantity + (movement.type === 'Purchase' ? quantity : -quantity));
+      const unitCost = movement.type === 'Purchase' && Number(movement.unitCost) > 0
+        ? ((item.quantity * item.unitCost) + quantity * Number(movement.unitCost)) / Math.max(1, item.quantity + quantity)
+        : item.unitCost;
+      const status: InventoryItem['status'] = nextQuantity <= 0 ? 'Out of Stock' : nextQuantity <= item.reorderPoint ? 'Low Stock' : 'In Stock';
+      const entry: InventoryMovement = { ...movement, quantity, id: `move-${Date.now()}-${Math.random().toString(36).slice(2, 8)}` };
+      return {
+        ...item,
+        quantity: nextQuantity,
+        unitCost,
+        status,
+        supplier: movement.type === 'Purchase' && movement.supplier ? movement.supplier : item.supplier,
+        lastPurchaseDate: movement.type === 'Purchase' ? movement.date : item.lastPurchaseDate,
+        purchaseReference: movement.type === 'Purchase' && movement.reference ? movement.reference : item.purchaseReference,
+        movements: [entry, ...(item.movements ?? [])],
+      };
+    }));
+  };
+
   const deleteInventoryItem = (id: string) => {
+    if (!canChangeInventory('inventory.delete')) { setCloudSyncError('Your access does not allow deleting inventory items. Ask the owner to update your permissions.'); return; }
     updateProjectInventory(prev => prev.filter(item => item.id !== id));
   };
 
@@ -612,6 +937,7 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
         inventoryItems,
         addInventoryItem,
         updateInventoryItem,
+        recordInventoryMovement,
         deleteInventoryItem,
         savedReports,
         deleteSavedReport,
@@ -629,6 +955,12 @@ export const FarmProjectProvider: React.FC<{ children: React.ReactNode }> = ({ c
         updateAppPreferences,
         createWorkspaceBackup,
         restoreWorkspaceBackup,
+        cloudSyncError,
+        cloudSyncLoading: cloudSyncLoading || authLoading || Boolean(session?.user.id && cloudHydratedUserId.current !== session.user.id),
+        requiresSignIn,
+        currentProjectIsOwner,
+        currentProjectPermissions,
+        currentProjectAccessKnown: Boolean(currentProjectAccess),
         isMobileNavOpen,
         setIsMobileNavOpen,
       }}

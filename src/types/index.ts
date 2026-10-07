@@ -62,6 +62,25 @@ export interface InventoryItem {
   unitCost: number;
   status: 'In Stock' | 'Low Stock' | 'Out of Stock';
   reorderPoint: number;
+  targetStock?: number;
+  supplier?: string;
+  lastPurchaseDate?: string;
+  purchaseReference?: string;
+  expiryDate?: string;
+  batchNumber?: string;
+  storageLocation?: string;
+  movements?: InventoryMovement[];
+}
+
+export interface InventoryMovement {
+  id: string;
+  type: 'Purchase' | 'Usage' | 'Sale' | 'Loss' | 'Adjustment';
+  quantity: number;
+  date: string;
+  note?: string;
+  supplier?: string;
+  unitCost?: number;
+  reference?: string;
 }
 
 export interface FarmProject {
@@ -134,10 +153,16 @@ export interface FarmProject {
     monthsUntilPositiveCashFlow: number | null;
     // Startup Capex
     landRentPurchase: number;
+    landPurchaseCost: number;
+    landRentLeaseCost: number;
     landPreparation: number;
     equipmentMachinery: number;
     infrastructureSetup: number;
     initialInputs: number;
+    startupSeedsCost: number;
+    startupSeedlingsCost: number;
+    startupAnimalsCost: number;
+    startupFingerlingsCost: number;
     initialWorkingCapital: number;
     initialLabour: number;
     otherStartupCosts: number;
@@ -145,11 +170,33 @@ export interface FarmProject {
     // Operating items (annualized or per cycle)
     labourCost: number;
     inputsCost: number;
+    seedCost: number;
+    seedlingsCost: number;
+    fertilizerCost: number;
+    manureCost: number;
+    pesticidesCost: number;
+    herbicidesCost: number;
+    feedCost: number;
+    fishFeedCost: number;
+    medicineCost: number;
+    vaccineCost: number;
+    fuelCost: number;
     transportCost: number;
     utilitiesCost: number;
+    electricityCost: number;
+    waterCost: number;
+    irrigationCost: number;
     maintenanceCost: number;
     packagingStorageCost: number;
+    harvestingCost: number;
+    processingCost: number;
+    marketFeesCost: number;
+    sellingAgentFeesCost: number;
+    animalPenCost: number;
+    storageShedCost: number;
+    securityCost: number;
     insuranceContingencyCost: number;
+    miscellaneousCost: number;
     customExpenses: CostItem[];
     financing: {
       hasLoan: boolean;

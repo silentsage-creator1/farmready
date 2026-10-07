@@ -15,6 +15,7 @@ import {
   FileText,
   BookOpen,
   User,
+  Users,
   Settings,
   HelpCircle,
   LogOut,
@@ -199,6 +200,13 @@ export const Sidebar: React.FC = () => {
         >
           <User className="w-4 h-4 shrink-0" />
           <span>Profile</span>
+        </button>
+        <button
+          onClick={() => handleNav('team_access')}
+          className={`w-full ${navItemClass('team_access')}`}
+        >
+          <Users className="w-4 h-4 shrink-0" />
+          <span>People &amp; Access</span>
         </button>
         <button
           onClick={() => handleNav('settings')}

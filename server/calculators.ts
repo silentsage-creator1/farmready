@@ -23,15 +23,30 @@ export function calculate(type: string, input: CalculatorInput): Record<string, 
     }
     case 'profit': {
       const quantity = n(input, 'quantity'); const price = n(input, 'price');
-      const variableCostPerUnit = n(input, 'variableCostPerUnit'); const fixedCosts = n(input, 'fixedCosts');
-      const revenue = quantity * price; const variableCosts = quantity * variableCostPerUnit;
-      const grossProfit = revenue - variableCosts; const netProfit = grossProfit - fixedCosts;
-      return { revenue, variableCosts, totalExpenses: variableCosts + fixedCosts, grossProfit, grossMargin: revenue ? grossProfit / revenue * 100 : 0, netProfit, netMargin: revenue ? netProfit / revenue * 100 : 0, profitPerUnit: quantity ? netProfit / quantity : 0 };
+      const costs = (input.costs && typeof input.costs === 'object' ? input.costs : {}) as Record<string, unknown>;
+      const costValue = (key: string) => Math.max(0, Number(costs[key]) || 0);
+      const productionCostKeys = ['seeds','seedlings','fertilizerManure','pesticides','herbicides','animalFeed','medicine','vaccines','farmLabour','waterIrrigation','fuel','electricity','harvesting','processing','packaging'];
+      const totalCostKeys = [...productionCostKeys,'transportToMarket','marketFees','sellingAgentFees','otherFarmCosts'];
+      const productionCosts = productionCostKeys.reduce((sum, key) => sum + costValue(key), 0);
+      const totalExpenses = totalCostKeys.reduce((sum, key) => sum + costValue(key), 0);
+      const revenue = quantity * price; const grossProfit = revenue - productionCosts; const netProfit = revenue - totalExpenses;
+      return { revenue, productionCosts, totalExpenses, grossProfit, grossMargin: revenue ? grossProfit / revenue * 100 : 0, netProfit, netMargin: revenue ? netProfit / revenue * 100 : 0, profitPerUnit: quantity ? netProfit / quantity : 0 };
     }
     case 'breakeven': {
-      const price = n(input, 'price'); const variableCost = n(input, 'variableCost'); const fixedCosts = n(input, 'fixedCosts'); const capacity = n(input, 'capacity');
-      const contribution = price - variableCost; const units = contribution > 0 ? Math.ceil(fixedCosts / contribution) : null;
-      return { contributionPerUnit: contribution, units, revenue: units === null ? null : units * price, capacityPercent: units !== null && capacity ? units / capacity * 100 : null };
+      const price = Math.max(0, n(input, 'price'));
+      const capacity = Math.max(0, n(input, 'capacity'));
+      const productionCosts = input.productionCosts && typeof input.productionCosts === 'object' ? input.productionCosts as Record<string, unknown> : {};
+      const farmCosts = input.farmCosts && typeof input.farmCosts === 'object' ? input.farmCosts as Record<string, unknown> : {};
+      const sumCosts = (items: Record<string, unknown>) => Object.values(items).reduce<number>((sum, value) => sum + Math.max(0, Number(value) || 0), 0);
+      const totalProductionCosts = sumCosts(productionCosts);
+      const totalFarmCosts = sumCosts(farmCosts);
+      const hasCostInputs = Object.values(productionCosts).some(value => Number(value) > 0) || Object.values(farmCosts).some(value => Number(value) > 0);
+      const productionCostPerUnit = capacity > 0 ? totalProductionCosts / capacity : null;
+      const contributionPerUnit = productionCostPerUnit == null ? null : price - productionCostPerUnit;
+      const units = hasCostInputs && contributionPerUnit != null && contributionPerUnit > 0 ? Math.ceil(totalFarmCosts / contributionPerUnit) : null;
+      const capacityPercent = units != null && capacity > 0 ? units / capacity * 100 : null;
+      const reachable = units != null && units <= capacity;
+      return { capacity, periodMonths: Math.max(1, n(input, 'periodMonths', 12)), price, hasCostInputs, totalProductionCosts, totalFarmCosts, totalCosts: totalProductionCosts + totalFarmCosts, productionCostPerUnit, contributionPerUnit, units, revenue: units == null ? null : units * price, capacityPercent, reachable, revenueAtCapacity: capacity * price, profitAtCapacity: capacity * price - totalProductionCosts - totalFarmCosts };
     }
     case 'loan': {
       const principal = n(input, 'principal'); const annualRate = n(input, 'annualRate') / 100;
@@ -48,8 +63,7 @@ export function calculate(type: string, input: CalculatorInput): Record<string, 
     case 'roi': {
       const project = input.project as { financialModel?: Record<string, unknown>; productionPlan?: Record<string, unknown>; marketPlan?: Record<string, unknown>; farmDetails?: Record<string, unknown> } | undefined;
       const financial = project?.financialModel ?? {};
-      const leaseLand = project?.farmDetails?.landStatus === 'lease_partner';
-      const initialInvestment = n(input, 'initialInvestment', ['landRentPurchase','landPreparation','equipmentMachinery','infrastructureSetup','initialInputs','initialLabour','initialWorkingCapital','otherStartupCosts','startupContingency'].reduce((sum, key) => sum + (key === 'landRentPurchase' && leaseLand ? 0 : n(financial, key)), 0));
+      const initialInvestment = n(input, 'initialInvestment', ['landPurchaseCost','landPreparation','equipmentMachinery','infrastructureSetup','animalPenCost','storageShedCost','startupSeedsCost','startupSeedlingsCost','startupAnimalsCost','startupFingerlingsCost','initialLabour','initialWorkingCapital','otherStartupCosts','startupContingency'].reduce((sum, key) => sum + n(financial, key), 0));
       const additionalInvestment = n(input, 'additionalInvestment');
       const investment = initialInvestment + additionalInvestment;
       const production = project?.productionPlan ?? {}; const market = project?.marketPlan ?? {};
@@ -59,7 +73,7 @@ export function calculate(type: string, input: CalculatorInput): Record<string, 
       const quantity = Math.min(producedQuantity, buyerDemand);
       const revenue = n(input, 'revenue', quantity * n(market, 'expectedSellingPrice'));
       const customCosts = ((financial.customExpenses as { amount?: number; isMonthly?: boolean }[] | undefined) ?? []).reduce((sum, item) => sum + Math.max(0, Number(item.amount) || 0) * (item.isMonthly ? 12 : 1), 0);
-      const operatingCosts = n(input, 'operatingCosts', ['labourCost','inputsCost','transportCost','utilitiesCost','maintenanceCost','packagingStorageCost','insuranceContingencyCost'].reduce((sum, key) => sum + n(financial, key), 0) + customCosts + (leaseLand ? n(financial, 'landRentPurchase') : 0));
+      const operatingCosts = n(input, 'operatingCosts', ['landRentLeaseCost','labourCost','inputsCost','seedCost','seedlingsCost','fertilizerCost','manureCost','pesticidesCost','herbicidesCost','feedCost','fishFeedCost','medicineCost','vaccineCost','fuelCost','transportCost','utilitiesCost','electricityCost','waterCost','irrigationCost','maintenanceCost','securityCost','packagingStorageCost','harvestingCost','processingCost','marketFeesCost','sellingAgentFeesCost','insuranceContingencyCost','miscellaneousCost'].reduce((sum, key) => sum + n(financial, key), 0) + customCosts);
       const otherCosts = n(input, 'otherCosts');
       const costs = operatingCosts + otherCosts;
       const netReturn = revenue - costs; const netCashFlow = revenue - n(input, 'cashExpenses', costs);
@@ -74,20 +88,27 @@ export function calculate(type: string, input: CalculatorInput): Record<string, 
       return { initialInvestment, additionalInvestment, totalInvestment: investment, revenue, operatingCosts, otherCosts, totalCosts: costs, netReturn, roiPercent: investment > 0 ? netReturn / investment * 100 : null, netCashFlow, cumulativeCashFlows, paybackPeriods, periodLabel: input.periodLabel === 'season' ? 'season' : 'year' };
     }
     case 'crop': {
-      const area = n(input, 'area'); const seedKg = area * n(input, 'seedRateKgHa'); const bagSize = Math.max(1, n(input, 'seedBagKg', 25));
-      const harvest = area * n(input, 'yieldTonnesHa'); const adjustedHarvest = harvest * (1 - percent(n(input, 'lossPercent')));
+      const area = Math.max(0, n(input, 'area')); const seedRateKgHa = Math.max(0, n(input, 'seedRateKgHa')); const seedKgPerHa = seedRateKgHa;
+      const yieldKgHa = Math.max(0, n(input, 'yieldKgHa', n(input, 'yieldTonnesHa') * 1000));
+      const seedKg = area * seedRateKgHa; const bagSize = Math.max(1, n(input, 'seedBagKg', 25));
+      const expectedHarvestKgPerHa = yieldKgHa; const expectedHarvestKg = area * yieldKgHa;
+      const harvest = expectedHarvestKg / 1000; const adjustedHarvest = harvest * (1 - percent(n(input, 'lossPercent')));
       const price = n(input, 'sellingPrice'); const priceUnit = input.priceUnit === 'tonne' ? 'tonne' : 'kg'; const saleQuantity = priceUnit === 'kg' ? adjustedHarvest * 1000 : adjustedHarvest;
-      return { seedKg, seedBags: Math.ceil(seedKg / bagSize), expectedHarvestTonnes: harvest, adjustedHarvestTonnes: adjustedHarvest, potentialRevenue: saleQuantity * price, saleQuantity, priceUnit };
+      return { cropType: String(input.cropType ?? ''), areaHectares: area, seedKgPerHa, seedKg, seedBags: Math.ceil(seedKg / bagSize), expectedYieldKgPerHa: yieldKgHa, expectedHarvestKgPerHa, expectedHarvestKg, expectedHarvestTonnes: harvest, adjustedHarvestTonnes: adjustedHarvest, potentialRevenue: saleQuantity * price, saleQuantity, priceUnit };
     }
     case 'fertilizer': {
-      const area = n(input, 'area'); const basalKg = area * n(input, 'basalRateKgHa'); const topKg = area * n(input, 'topdressRateKgHa');
-      const requiredKg = basalKg + topKg; const bagSize = Math.max(1, n(input, 'bagSizeKg', 50)); const bags = Math.ceil(requiredKg / bagSize);
-      return { basalKg, topdressKg: topKg, requiredKg, bags, purchaseCost: bags * n(input, 'pricePerBag') };
+      const area = Math.max(0, n(input, 'area')); const rateKgHa = Math.max(0, n(input, 'rateKgHa', n(input, 'basalRateKgHa') + n(input, 'topdressRateKgHa')));
+      const applications = Math.max(1, Math.floor(n(input, 'applications', 1))); const requiredKgPerApplicationPerHa = rateKgHa / applications;
+      const requiredKg = area * rateKgHa; const bagSize = Math.max(1, n(input, 'bagSizeKg', 50)); const exactBags = requiredKg / bagSize; const bags = Math.ceil(exactBags);
+      return { cropType: String(input.cropType ?? ''), fertilizerType: String(input.fertilizerType ?? ''), areaHectares: area, requiredKgPerHa: rateKgHa, requiredKgPerApplicationPerHa, applications, requiredKgPerApplication: requiredKg / applications, requiredKg, exactBags, bags, bagSizeKg: bagSize, purchaseCost: bags * n(input, 'pricePerBag') };
     }
     case 'feed': {
-      const animals = n(input, 'animalCount'); const survivors = animals * (1 - percent(n(input, 'mortalityPercent')));
-      const totalKg = animals * n(input, 'dailyFeedKg') * n(input, 'days'); const bagSize = Math.max(1, n(input, 'bagSizeKg', 25)); const bags = Math.ceil(totalKg / bagSize); const cost = bags * n(input, 'pricePerBag');
-      return { dailyKg: animals * n(input, 'dailyFeedKg'), totalKg, bags, totalCost: cost, costPerAnimal: animals ? cost / animals : 0, costPerSurvivor: survivors ? cost / survivors : 0, survivors };
+      const area = Math.max(0, n(input, 'areaHectares')); const stockingRate = Math.max(0, n(input, 'stockingRatePerHa'));
+      const animalsPerHa = stockingRate; const animals = Math.floor(area * stockingRate); const dailyFeedPerAnimal = Math.max(0, n(input, 'dailyFeedKg'));
+      const days = Math.max(0, n(input, 'days')); const dailyKgPerHa = animalsPerHa * dailyFeedPerAnimal; const dailyKg = animals * dailyFeedPerAnimal;
+      const totalKg = dailyKg * days; const monthlyKg = dailyKg * 30; const bagSize = Math.max(1, n(input, 'bagSizeKg', 25)); const exactBags = totalKg / bagSize; const bags = Math.ceil(exactBags); const cost = bags * n(input, 'pricePerBag');
+      const survivors = animals * (1 - percent(n(input, 'mortalityPercent')));
+      return { livestockType: String(input.livestockType ?? ''), areaHectares: area, stockingRatePerHa: stockingRate, animalsPerHa, animalCount: animals, survivors, dailyFeedPerAnimalKg: dailyFeedPerAnimal, dailyKgPerHa, dailyKg, monthlyKg, days, totalKg, exactBags, bags, bagSizeKg: bagSize, totalCost: cost, costPerAnimal: animals ? cost / animals : 0, costPerSurvivor: survivors ? cost / survivors : 0 };
     }
     case 'fish': {
       const stocked = n(input, 'stocked'); const survivors = Math.round(stocked * percent(n(input, 'survivalPercent'))); const weight = n(input, 'harvestWeightKg'); const biomass = survivors * weight;

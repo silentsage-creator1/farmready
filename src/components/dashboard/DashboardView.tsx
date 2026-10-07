@@ -59,10 +59,11 @@ export const DashboardView: React.FC = () => {
   const reportSnapshot = savedReports.filter(report => report.projectId === currentProject.id).sort((a, b) => b.date.localeCompare(a.date))[0];
   const reportMetrics = reportSnapshot ? calculateFinancialMetrics(reportSnapshot.projectSnapshot) : null;
   const hasFinancialInputs = [
-    fin.landRentPurchase, fin.landPreparation, fin.equipmentMachinery, fin.infrastructureSetup,
-    fin.initialInputs, fin.initialLabour, fin.initialWorkingCapital, fin.otherStartupCosts,
+    fin.landPurchaseCost, fin.landRentLeaseCost, fin.landPreparation, fin.equipmentMachinery, fin.infrastructureSetup, fin.animalPenCost, fin.storageShedCost,
+    fin.startupSeedsCost, fin.startupSeedlingsCost, fin.startupAnimalsCost, fin.startupFingerlingsCost, fin.initialLabour, fin.initialWorkingCapital, fin.otherStartupCosts,
     fin.startupContingency, fin.availableCapital, fin.labourCost, fin.inputsCost,
-    fin.transportCost, fin.utilitiesCost, fin.maintenanceCost, fin.packagingStorageCost,
+    fin.seedCost, fin.seedlingsCost, fin.fertilizerCost, fin.manureCost, fin.pesticidesCost, fin.herbicidesCost, fin.feedCost, fin.fishFeedCost, fin.medicineCost, fin.vaccineCost, fin.fuelCost, fin.transportCost,
+    fin.utilitiesCost, fin.electricityCost, fin.waterCost, fin.irrigationCost, fin.maintenanceCost, fin.securityCost, fin.packagingStorageCost, fin.harvestingCost, fin.processingCost, fin.marketFeesCost, fin.sellingAgentFeesCost, fin.miscellaneousCost,
     currentProject.marketPlan.expectedSellingPrice, prod.expectedOutputPerCycle,
   ].some(value => Number(value) > 0);
   const shown = (value: number, formatted: (input: number) => string = formatNaira) => hasFinancialInputs ? formatted(value) : 'Not entered';

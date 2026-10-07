@@ -70,8 +70,9 @@ function getSystemFormState(project: FarmProject): FormSystemState {
 function getCompletion(state: FormSystemState): Record<SystemKey, boolean> {
   const { market, production, financial, people, information, infrastructure, risk } = state;
   const risks = risk.risks;
-  const annualOperatingCost = financial.labourCost + financial.inputsCost + financial.transportCost + financial.utilitiesCost +
-    financial.maintenanceCost + financial.packagingStorageCost + financial.insuranceContingencyCost +
+  const annualOperatingCost = financial.labourCost + financial.inputsCost + financial.seedCost + financial.fertilizerCost + financial.feedCost +
+    financial.fuelCost + financial.transportCost + financial.utilitiesCost + financial.electricityCost + financial.waterCost +
+    financial.maintenanceCost + financial.packagingStorageCost + financial.insuranceContingencyCost + financial.miscellaneousCost +
     (financial.customExpenses || []).reduce((sum, item) => sum + item.amount * (item.isMonthly ? 12 : 1), 0);
 
   return {
@@ -85,7 +86,7 @@ function getCompletion(state: FormSystemState): Record<SystemKey, boolean> {
       hasPositiveNumber(production.plan.salesFrequencyMonths),
     financial: financial.availableCapital >= 0 &&
       hasNonNegativeNumber(financial.maxAffordableLoss) && hasNonNegativeNumber(financial.monthsUntilPositiveCashFlow) &&
-      (financial.landRentPurchase + financial.landPreparation + financial.equipmentMachinery + financial.infrastructureSetup + financial.initialInputs + financial.initialWorkingCapital) > 0 &&
+      (financial.landPurchaseCost + financial.landRentLeaseCost + financial.landPreparation + financial.equipmentMachinery + financial.infrastructureSetup + financial.startupSeedsCost + financial.startupSeedlingsCost + financial.startupAnimalsCost + financial.startupFingerlingsCost + financial.initialWorkingCapital) > 0 &&
       annualOperatingCost > 0,
     people: hasText(people.dailyManager) && hasText(people.farmingExperience) && hasText(people.responsibilities),
     information: hasText(information.method) && hasText(information.reviewFrequency) && hasText(information.independentVerifier) && hasText(information.verificationMethod),
@@ -113,11 +114,17 @@ function InputField({ label, value, onChange, type = 'text', required = false, m
       <span className="flex items-center gap-2">
         <input
           type={type}
-          value={value}
-          min={min}
-          step={step}
-          placeholder={placeholder}
+          value={type === 'number' && Number(value) === 0 ? '' : value}
+          min={type === 'number' ? min ?? 0 : undefined}
+          step={type === 'number' ? step ?? 'any' : step}
+          placeholder={placeholder ?? (type === 'number' ? 'Enter value' : undefined)}
           required={required}
+          onKeyDown={event => {
+            if (type === 'number' && (['e', 'E', '+'].includes(event.key) || (event.key === '-' && Number(min ?? 0) >= 0))) event.preventDefault();
+          }}
+          onPaste={event => {
+            if (type === 'number' && Number(min ?? 0) >= 0 && event.clipboardData.getData('text').includes('-')) event.preventDefault();
+          }}
           onChange={event => onChange(event.target.value)}
           className="w-full min-w-0 rounded-xl border border-neutral-300 bg-white px-3.5 py-2.5 text-sm text-neutral-900 shadow-xs outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/20"
         />
@@ -389,10 +396,10 @@ export const AssessmentWizard: React.FC = () => {
               { value: 'Assumed customer', label: 'Assumed; not validated' }, { value: 'Initial contact made', label: 'Initial contact made' },
               { value: 'Validated buyer/customer (MOU/LOI)', label: 'Validated buyer with LOI or agreement' }, { value: 'Existing buyer relationship', label: 'Existing buyer relationship' },
             ]} />
-            <InputField label={`Expected selling price per ${currentProject.productionPlan.outputUnit || 'unit'}`} type="number" min={0} value={currentProject.marketPlan.expectedSellingPrice || ''} onChange={value => updateMarket({ expectedSellingPrice: Number(value) || 0 })} required suffix="₦" />
-            <InputField label={`Expected buyer purchase volume per cycle (${currentProject.productionPlan.outputUnit || 'units'})`} type="number" min={0} value={currentProject.marketPlan.expectedPurchaseVolumePerCycle || ''} onChange={value => updateMarket({ expectedPurchaseVolumePerCycle: Number(value) || 0 })} required />
+            <InputField label={`Expected selling price per ${currentProject.productionPlan.outputUnit || 'unit'}`} type="number" placeholder="Enter value" min={0} value={currentProject.marketPlan.expectedSellingPrice || ''} onChange={value => updateMarket({ expectedSellingPrice: Number(value) || 0 })} required suffix="₦" />
+            <InputField label={`Expected buyer purchase volume per cycle (${currentProject.productionPlan.outputUnit || 'units'})`} type="number" placeholder="Enter value" min={0} value={currentProject.marketPlan.expectedPurchaseVolumePerCycle || ''} onChange={value => updateMarket({ expectedPurchaseVolumePerCycle: Number(value) || 0 })} required />
             <p className="sm:col-span-2 -mt-3 text-xs text-neutral-500">Enter a buyer-backed estimate. Leaving this at zero keeps projected revenue at zero until likely purchase volume is confirmed.</p>
-            <InputField label="Distance to primary market" type="number" min={0} value={currentProject.marketPlan.distanceToMarketKm || ''} onChange={value => updateMarket({ distanceToMarketKm: Number(value) || 0 })} suffix="km" />
+            <InputField label="Distance to primary market" type="number" placeholder="Enter value" min={0} value={currentProject.marketPlan.distanceToMarketKm || ''} onChange={value => updateMarket({ distanceToMarketKm: Number(value) || 0 })} suffix="km" />
             <SelectField label="Sales and delivery method" value={currentProject.marketPlan.salesMethod} onChange={value => updateMarket({ salesMethod: value as FarmProject['marketPlan']['salesMethod'] })} options={[
               { value: 'Farm gate pickup', label: 'Farm gate pickup' }, { value: 'Direct delivery to factory', label: 'Direct delivery to buyer or processor' },
               { value: 'Wholesale market hub', label: 'Wholesale market hub' },
@@ -435,17 +442,17 @@ export const AssessmentWizard: React.FC = () => {
                 updateProduction({ product: value });
               }} options={produceOptions.map(value => ({ value, label: value }))} placeholder="Choose a product or service" />
               <InputField label="Production method" value={currentProject.productionPlan.productionMethod} onChange={value => updateProduction({ productionMethod: value })} required placeholder="e.g. Open-field, semi-mechanized" />
-              <InputField label="Farm size" type="number" min={0} step={0.5} value={currentProject.farmDetails.farmSize || ''} onChange={value => {
+              <InputField label="Farm size" type="number" placeholder="Enter value" min={0} step={0.5} value={currentProject.farmDetails.farmSize || ''} onChange={value => {
                 const size = Number(value) || 0;
                 updateDetails({ farmSize: size });
                 if (AREA_CAPACITY_TYPES.includes(currentProject.farmType)) updateProduction({ capacity: size, capacityUnit: currentProject.farmDetails.sizeUnit });
               }} required suffix={currentProject.farmDetails.sizeUnit} />
-              {!AREA_CAPACITY_TYPES.includes(currentProject.farmType) && <InputField label="Facility or service capacity per cycle" type="number" min={0} value={currentProject.productionPlan.capacity || ''} onChange={value => updateProduction({ capacity: Number(value) || 0 })} required suffix={currentProject.productionPlan.capacityUnit} />}
+              {!AREA_CAPACITY_TYPES.includes(currentProject.farmType) && <InputField label="Facility or service capacity per cycle" type="number" placeholder="Enter value" min={0} value={currentProject.productionPlan.capacity || ''} onChange={value => updateProduction({ capacity: Number(value) || 0 })} required suffix={currentProject.productionPlan.capacityUnit} />}
               <SelectField label="Production cycles per year" value={currentProject.productionPlan.cyclesPerYear || ''} required onChange={value => updateProduction({ cyclesPerYear: Number(value) || 0 })} options={[1, 2, 3, 4].map(value => ({ value, label: `${value}${value === 4 ? '+' : ''} cycle${value === 1 ? '' : 's'}` }))} />
-              <InputField label="Gestation / growth period" type="number" min={1} value={currentProject.productionPlan.gestationMonths || ''} onChange={value => updateProduction({ gestationMonths: Number(value) || 0 })} required suffix="months" />
-              <InputField label="Harvest / sales frequency" type="number" min={1} value={currentProject.productionPlan.salesFrequencyMonths || ''} onChange={value => updateProduction({ salesFrequencyMonths: Number(value) || 0 })} required suffix="months" />
-              <InputField label="Expected output per cycle" type="number" min={0} value={currentProject.productionPlan.expectedOutputPerCycle || ''} onChange={value => updateProduction({ expectedOutputPerCycle: Number(value) || 0 })} required suffix={currentProject.productionPlan.outputUnit} />
-              <InputField label="Expected production or post-harvest loss" type="number" min={0} step={0.5} value={currentProject.productionPlan.expectedLossPercent || ''} onChange={value => updateProduction({ expectedLossPercent: Number(value) || 0 })} suffix="%" />
+              <InputField label="Gestation / growth period" type="number" placeholder="Enter value" min={1} value={currentProject.productionPlan.gestationMonths || ''} onChange={value => updateProduction({ gestationMonths: Number(value) || 0 })} required suffix="months" />
+              <InputField label="Harvest / sales frequency" type="number" placeholder="Enter value" min={1} value={currentProject.productionPlan.salesFrequencyMonths || ''} onChange={value => updateProduction({ salesFrequencyMonths: Number(value) || 0 })} required suffix="months" />
+              <InputField label="Expected output per cycle" type="number" placeholder="Enter value" min={0} value={currentProject.productionPlan.expectedOutputPerCycle || ''} onChange={value => updateProduction({ expectedOutputPerCycle: Number(value) || 0 })} required suffix={currentProject.productionPlan.outputUnit} />
+              <InputField label="Expected production or post-harvest loss" type="number" placeholder="Enter value" min={0} step={0.5} value={currentProject.productionPlan.expectedLossPercent || ''} onChange={value => updateProduction({ expectedLossPercent: Number(value) || 0 })} suffix="%" />
             </div>
             <InputField label="Key production assumptions" value={currentProject.productionPlan.keyAssumptions} onChange={value => updateProduction({ keyAssumptions: value })} placeholder="Optional: season, breed/variety, feed or input assumptions" />
           </div>
@@ -454,7 +461,7 @@ export const AssessmentWizard: React.FC = () => {
         {step.key === 'financial' && (
           <div className="space-y-6">
             <div className="grid gap-5 sm:grid-cols-2">
-              <InputField label="Available capital or equity committed" type="number" min={0} value={currentProject.financialModel.availableCapital || ''} onChange={value => updateFinancial({ availableCapital: Number(value) || 0 })} required suffix="₦" />
+              <InputField label="Available capital or equity committed" type="number" placeholder="Enter value" min={0} value={currentProject.financialModel.availableCapital || ''} onChange={value => updateFinancial({ availableCapital: Number(value) || 0 })} required suffix="₦" />
               <div className="rounded-xl border border-emerald-100 bg-emerald-50/70 p-4">
                 <p className="text-xs font-semibold text-emerald-900">Calculated startup investment</p>
                 <p className="mt-1 font-mono text-xl font-bold text-emerald-900">{formatNaira(metrics.totalStartupCapital)}</p>
@@ -464,28 +471,32 @@ export const AssessmentWizard: React.FC = () => {
             <fieldset>
               <legend className="mb-3 text-sm font-bold text-neutral-900">Startup investment (₦)</legend>
               <div className="grid gap-4 sm:grid-cols-2">
-                <p className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-xs leading-relaxed text-neutral-600 sm:col-span-2">Land purchase or annual lease costs are entered in the Infrastructure section. Lease costs are treated as annual operating expenses; purchases are treated as startup investment.</p>
-                <InputField label="Equipment and machinery" type="number" min={0} value={currentProject.financialModel.equipmentMachinery || ''} onChange={value => updateFinancial({ equipmentMachinery: Number(value) || 0 })} suffix="₦" />
-                <InputField label="Infrastructure setup" type="number" min={0} value={currentProject.financialModel.infrastructureSetup || ''} onChange={value => updateFinancial({ infrastructureSetup: Number(value) || 0 })} suffix="₦" />
-              <InputField label="Initial working capital buffer" type="number" min={0} value={currentProject.financialModel.initialWorkingCapital || ''} onChange={value => updateFinancial({ initialWorkingCapital: Number(value) || 0 })} suffix="₦" />
-              <InputField label="Maximum loss you can afford" type="number" min={0} value={currentProject.financialModel.maxAffordableLoss ?? ''} onChange={value => updateFinancial({ maxAffordableLoss: value === '' ? null : Number(value) })} required suffix="₦" />
-              <InputField label="Months you can operate before positive cash flow" type="number" min={0} value={currentProject.financialModel.monthsUntilPositiveCashFlow ?? ''} onChange={value => updateFinancial({ monthsUntilPositiveCashFlow: value === '' ? null : Number(value) })} required suffix="months" />
-                <InputField label="Land preparation" type="number" min={0} value={currentProject.financialModel.landPreparation || ''} onChange={value => updateFinancial({ landPreparation: Number(value) || 0 })} suffix="₦" />
-                <InputField label="Initial inputs" type="number" min={0} value={currentProject.financialModel.initialInputs || ''} onChange={value => updateFinancial({ initialInputs: Number(value) || 0 })} suffix="₦" />
-                <InputField label="One-time setup labour" type="number" min={0} value={currentProject.financialModel.initialLabour || ''} onChange={value => updateFinancial({ initialLabour: Number(value) || 0 })} suffix="₦" />
-                <InputField label="Other startup costs" type="number" min={0} value={currentProject.financialModel.otherStartupCosts || ''} onChange={value => updateFinancial({ otherStartupCosts: Number(value) || 0 })} suffix="₦" />
-                <InputField label="Startup contingency reserve" type="number" min={0} value={currentProject.financialModel.startupContingency || ''} onChange={value => updateFinancial({ startupContingency: Number(value) || 0 })} suffix="₦" />
+                <p className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-xs leading-relaxed text-neutral-600 sm:col-span-2">Enter land purchase as startup investment and annual land rent or lease as an operating cost. Enter ₦0 for whichever does not apply.</p>
+                <InputField label="Land purchase" type="number" placeholder="Enter value" min={0} value={currentProject.financialModel.landPurchaseCost || ''} onChange={value => updateFinancial({ landPurchaseCost: Number(value) || 0 })} suffix="₦" />
+                <InputField label="Annual land rent / lease" type="number" placeholder="Enter value" min={0} value={currentProject.financialModel.landRentLeaseCost || ''} onChange={value => updateFinancial({ landRentLeaseCost: Number(value) || 0 })} suffix="₦" />
+                <InputField label="Equipment and machinery" type="number" placeholder="Enter value" min={0} value={currentProject.financialModel.equipmentMachinery || ''} onChange={value => updateFinancial({ equipmentMachinery: Number(value) || 0 })} suffix="₦" />
+                <InputField label="Infrastructure setup" type="number" placeholder="Enter value" min={0} value={currentProject.financialModel.infrastructureSetup || ''} onChange={value => updateFinancial({ infrastructureSetup: Number(value) || 0 })} suffix="₦" />
+              <InputField label="Initial working capital buffer" type="number" placeholder="Enter value" min={0} value={currentProject.financialModel.initialWorkingCapital || ''} onChange={value => updateFinancial({ initialWorkingCapital: Number(value) || 0 })} suffix="₦" />
+              <InputField label="Maximum loss you can afford" type="number" placeholder="Enter value" min={0} value={currentProject.financialModel.maxAffordableLoss ?? ''} onChange={value => updateFinancial({ maxAffordableLoss: value === '' ? null : Number(value) })} required suffix="₦" />
+              <InputField label="Months you can operate before positive cash flow" type="number" placeholder="Enter value" min={0} value={currentProject.financialModel.monthsUntilPositiveCashFlow ?? ''} onChange={value => updateFinancial({ monthsUntilPositiveCashFlow: value === '' ? null : Number(value) })} required suffix="months" />
+                <InputField label="Land preparation" type="number" placeholder="Enter value" min={0} value={currentProject.financialModel.landPreparation || ''} onChange={value => updateFinancial({ landPreparation: Number(value) || 0 })} suffix="₦" />
+                <InputField label="Seeds to start with" type="number" placeholder="Enter value" min={0} value={currentProject.financialModel.startupSeedsCost || ''} onChange={value => updateFinancial({ startupSeedsCost: Number(value) || 0 })} suffix="₦" />
+                <InputField label="One-time setup labour" type="number" placeholder="Enter value" min={0} value={currentProject.financialModel.initialLabour || ''} onChange={value => updateFinancial({ initialLabour: Number(value) || 0 })} suffix="₦" />
+                <InputField label="Other startup costs" type="number" placeholder="Enter value" min={0} value={currentProject.financialModel.otherStartupCosts || ''} onChange={value => updateFinancial({ otherStartupCosts: Number(value) || 0 })} suffix="₦" />
+                <InputField label="Startup contingency reserve" type="number" placeholder="Enter value" min={0} value={currentProject.financialModel.startupContingency || ''} onChange={value => updateFinancial({ startupContingency: Number(value) || 0 })} suffix="₦" />
               </div>
             </fieldset>
             <fieldset>
               <legend className="mb-3 text-sm font-bold text-neutral-900">Expected annual operating expenses (₦)</legend>
               <div className="grid gap-4 sm:grid-cols-2">
                 {([
-                  ['labourCost', 'Labour'], ['inputsCost', 'Feed, seed or fertilizer'], ['transportCost', 'Transport'],
-                  ['utilitiesCost', 'Utilities'], ['maintenanceCost', 'Maintenance'], ['packagingStorageCost', 'Packaging and storage'],
-                  ['insuranceContingencyCost', 'Insurance and contingency'],
+                  ['labourCost', 'Farm Workers’ Pay'], ['inputsCost', 'Other input costs'], ['seedCost', 'Seeds'],
+                  ['fertilizerCost', 'Fertilizer'], ['feedCost', 'Feed'], ['fuelCost', 'Fuel'], ['transportCost', 'Transport'],
+                  ['utilitiesCost', 'Other utility costs'], ['electricityCost', 'Electricity'], ['waterCost', 'Water'],
+                  ['maintenanceCost', 'Maintenance'], ['packagingStorageCost', 'Packaging and storage'],
+                  ['insuranceContingencyCost', 'Insurance and contingency'], ['miscellaneousCost', 'Miscellaneous costs'],
                 ] as const).map(([key, label]) => (
-                  <InputField key={key} label={label} type="number" min={0} value={currentProject.financialModel[key] || ''} onChange={value => updateFinancial({ [key]: Number(value) || 0 } as Partial<FarmProject['financialModel']>)} suffix="₦" />
+                  <InputField key={key} label={label} type="number" placeholder="Enter value" min={0} value={currentProject.financialModel[key] || ''} onChange={value => updateFinancial({ [key]: Number(value) || 0 } as Partial<FarmProject['financialModel']>)} suffix="₦" />
                 ))}
               </div>
             </fieldset>
@@ -562,9 +573,6 @@ export const AssessmentWizard: React.FC = () => {
                 { value: 'Borehole / Well on site', label: 'Borehole or well on site' }, { value: 'River / Stream nearby', label: 'River or stream nearby' },
                 { value: 'Seasonal rain only', label: 'Seasonal rain only' }, { value: 'Municipal water', label: 'Municipal water' }, { value: 'None yet', label: 'No water source secured' },
               ]} />
-              {currentProject.farmDetails.landStatus && currentProject.farmDetails.landStatus !== 'owned' && (
-                <InputField label={currentProject.farmDetails.landStatus === 'plan_to_buy' ? 'Budgeted land purchase cost' : 'Annual land lease cost'} type="number" min={0} value={currentProject.financialModel.landRentPurchase || ''} onChange={value => updateFinancial({ landRentPurchase: Number(value) || 0 })} suffix="₦" />
-              )}
               <div className="rounded-xl border border-neutral-200 bg-neutral-50 p-4 text-sm text-neutral-700">
                 Confirm legal access, site suitability, water reliability, storage and transport before committing infrastructure funds.
               </div>

@@ -234,7 +234,7 @@ export function evaluateSevenSystems(project: FarmProject): SystemReadiness[] {
   if (farmDetails.landStatus === 'plan_to_buy') applyScoreCeiling(systems[5], 74);
 
   // Land purchase can dominate the project budget even when other infrastructure answers are complete.
-  const landShare = farmDetails.landStatus !== 'lease_partner' && metrics.totalStartupCapital > 0 ? (financialModel.landRentPurchase / metrics.totalStartupCapital) * 100 : 0;
+  const landShare = metrics.totalStartupCapital > 0 ? (financialModel.landPurchaseCost / metrics.totalStartupCapital) * 100 : 0;
   const infrastructure = systems[5];
   if (landShare > 40) {
     infrastructure.status = infrastructure.status === 'Insufficient Information' ? infrastructure.status : 'Needs Attention';

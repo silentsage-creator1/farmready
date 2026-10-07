@@ -24,15 +24,28 @@ import { FarmInventoryView } from './components/tools/FarmInventoryView';
 import { ReportsArchiveView } from './components/reports/ReportsArchiveView';
 import { ResourcesView } from './components/resources/ResourcesView';
 import { ProfileView } from './components/account/ProfileView';
+import { TeamAccessView } from './components/account/TeamAccessView';
 import { WorkspaceEntryView } from './components/account/WorkspaceEntryView';
 import { SettingsView } from './components/account/SettingsView';
 import { HelpSupportView } from './components/account/HelpSupportView';
 import { LandingPage } from './components/landing/LandingPage';
 import { X, BookOpen, Sparkles } from 'lucide-react';
+import { useAuth } from './context/AuthContext';
 
 const MainAppContent: React.FC = () => {
-  const { activeView, setActiveView, allProjects } = useFarmProject();
+  const { activeView, setActiveView, allProjects, currentProjectPermissions, currentProjectIsOwner, currentProjectAccessKnown, cloudSyncError, cloudSyncLoading, requiresSignIn } = useFarmProject();
+  const { session, loading: authLoading } = useAuth();
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const requiredPermission: Record<string, string> = {
+    dashboard: 'project.view', assessments: 'project.view', assessment_list: 'project.view', workspace_entry: 'project.view',
+    new_assessment: 'assessment.edit', financial: 'financial.view', cash_flow: 'financial.view', investment_analysis: 'financial.view', scenarios: 'financial.view', what_if: 'financial.view',
+    production_analysis: 'production.view', risk_analysis: 'risk.view', report: 'reports.view', reports_archive: 'reports.view',
+    tools: 'project.view', inventory: 'inventory.view',
+  };
+  const accessDenied = Boolean(session && currentProjectAccessKnown && !currentProjectIsOwner && requiredPermission[activeView] && !currentProjectPermissions.includes(requiredPermission[activeView]));
+
+  if (authLoading || cloudSyncLoading) return <div className="grid min-h-screen place-items-center bg-neutral-50 p-6 text-center"><div><div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-emerald-700 border-t-transparent" /><p className="mt-3 text-sm text-neutral-600">Loading your secure farm workspace…</p></div></div>;
+  if (requiresSignIn && !session) return <div className="min-h-screen bg-neutral-50 p-4 pt-10"><TeamAccessView /></div>;
 
   if (activeView === 'landing') {
     return <LandingPage />;
@@ -50,6 +63,8 @@ const MainAppContent: React.FC = () => {
 
         {/* Scrollable Viewport for App Views */}
         <main className="flex-1 overflow-y-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pb-24 lg:pb-10 scrollbar-thin">
+          {cloudSyncError && <div role="alert" className="mb-4 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">{cloudSyncError}</div>}
+          {accessDenied ? <section className="mx-auto max-w-xl rounded-2xl border border-amber-200 bg-amber-50 p-6 text-center"><h1 className="text-lg font-bold text-amber-950">You don’t have access to this section</h1><p className="mt-2 text-sm text-amber-900">The farm owner controls which areas each person can view or change. Contact the owner if you need access.</p></section> : <>
           {activeView === 'dashboard' && <DashboardView />}
           {activeView === 'workspace_entry' && <WorkspaceEntryView />}
           {activeView === 'assessments' && (allProjects.length > 0 ? <AssessmentWizard /> : <AssessmentsView />)}
@@ -68,8 +83,10 @@ const MainAppContent: React.FC = () => {
           {activeView === 'reports_archive' && <ReportsArchiveView />}
           {activeView === 'resources' && <ResourcesView />}
           {activeView === 'profile' && <ProfileView />}
+          {activeView === 'team_access' && <TeamAccessView />}
           {activeView === 'settings' && <SettingsView />}
           {activeView === 'help' && <HelpSupportView />}
+          </>}
         </main>
 
         {/* Native Mobile Bottom Navigation Bar */}

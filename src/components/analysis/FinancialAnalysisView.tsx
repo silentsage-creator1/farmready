@@ -24,6 +24,9 @@ export const FinancialAnalysisView: React.FC = () => {
   const cashFlowMonths = (((cashFlowCalculation.result?.months as {monthName:string;monthIndex:number;year?:number;periodLabel?:string;revenue:number;expenses:number;netCashFlow:number;cumulativeCashFlow:number;harvest:boolean}[] | undefined) ?? [])).slice().sort((a, b) => a.monthIndex - b.monthIndex);
   const cashFlowMetrics = cashFlowCalculation.result as (Record<string, unknown> & { estimatedPreHarvestCashNeed?: number; initialWorkingCapital?: number; workingCapitalShortfall?: number }) | null;
   const fin = currentProject.financialModel;
+  const productionInputsCost = fin.inputsCost + fin.seedCost + fin.seedlingsCost + fin.fertilizerCost + fin.manureCost + fin.pesticidesCost + fin.herbicidesCost + fin.feedCost + fin.fishFeedCost + fin.medicineCost + fin.vaccineCost + fin.irrigationCost;
+  const harvestHandlingCost = fin.packagingStorageCost + fin.harvestingCost + fin.processingCost;
+  const sellingDeliveryCost = fin.fuelCost + fin.transportCost + fin.marketFeesCost + fin.sellingAgentFeesCost;
 
   const maxBarValue = Math.max(...cashFlowMonths.map(m => Math.max(m.revenue, m.expenses, Math.abs(m.netCashFlow))), 1);
 
@@ -289,17 +292,17 @@ export const FinancialAnalysisView: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="p-4 rounded-xl border border-neutral-200 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-neutral-900">Direct Inputs (Fertilizer, Feed, Chemicals)</span>
-                <span className="text-xs font-mono font-bold text-neutral-900">{formatNaira(fin.inputsCost)}</span>
+                <span className="text-xs font-bold text-neutral-900">Production Inputs & Animal Health</span>
+                <span className="text-xs font-mono font-bold text-neutral-900">{formatNaira(productionInputsCost)}</span>
               </div>
               <div className="w-full bg-neutral-100 rounded-full h-2">
                 <div
                   className="bg-emerald-600 h-2 rounded-full"
-                  style={{ width: `${(fin.inputsCost / (metrics.annualOperatingExpenses || 1)) * 100}%` }}
+                  style={{ width: `${(productionInputsCost / (metrics.annualOperatingExpenses || 1)) * 100}%` }}
                 />
               </div>
               <span className="text-[11px] text-neutral-500">
-                {formatNumber((fin.inputsCost / (metrics.annualOperatingExpenses || 1)) * 100, 1)}% of annual expenses
+                {formatNumber((productionInputsCost / (metrics.annualOperatingExpenses || 1)) * 100, 1)}% of annual expenses
               </span>
             </div>
 
@@ -321,67 +324,67 @@ export const FinancialAnalysisView: React.FC = () => {
 
             <div className="p-4 rounded-xl border border-neutral-200 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-neutral-900">Packaging & Storage</span>
-                <span className="text-xs font-mono font-bold text-neutral-900">{formatNaira(fin.packagingStorageCost)}</span>
+                <span className="text-xs font-bold text-neutral-900">Harvesting, Processing & Packaging</span>
+                <span className="text-xs font-mono font-bold text-neutral-900">{formatNaira(harvestHandlingCost)}</span>
               </div>
               <div className="w-full bg-neutral-100 rounded-full h-2">
                 <div
                   className="bg-emerald-600 h-2 rounded-full"
-                  style={{ width: `${(fin.packagingStorageCost / (metrics.annualOperatingExpenses || 1)) * 100}%` }}
+                  style={{ width: `${(harvestHandlingCost / (metrics.annualOperatingExpenses || 1)) * 100}%` }}
                 />
               </div>
               <span className="text-[11px] text-neutral-500">
-                {formatNumber((fin.packagingStorageCost / (metrics.annualOperatingExpenses || 1)) * 100, 1)}% of annual expenses
+                {formatNumber((harvestHandlingCost / (metrics.annualOperatingExpenses || 1)) * 100, 1)}% of annual expenses
               </span>
             </div>
 
             <div className="p-4 rounded-xl border border-neutral-200 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-neutral-900">Transportation & Logistics</span>
-                <span className="text-xs font-mono font-bold text-neutral-900">{formatNaira(fin.transportCost)}</span>
+                <span className="text-xs font-bold text-neutral-900">Fuel, Delivery & Selling Fees</span>
+                <span className="text-xs font-mono font-bold text-neutral-900">{formatNaira(sellingDeliveryCost)}</span>
               </div>
               <div className="w-full bg-neutral-100 rounded-full h-2">
                 <div
                   className="bg-emerald-600 h-2 rounded-full"
-                  style={{ width: `${(fin.transportCost / (metrics.annualOperatingExpenses || 1)) * 100}%` }}
+                  style={{ width: `${(sellingDeliveryCost / (metrics.annualOperatingExpenses || 1)) * 100}%` }}
                 />
               </div>
               <span className="text-[11px] text-neutral-500">
-                {formatNumber((fin.transportCost / (metrics.annualOperatingExpenses || 1)) * 100, 1)}% of annual expenses
+                {formatNumber((sellingDeliveryCost / (metrics.annualOperatingExpenses || 1)) * 100, 1)}% of annual expenses
               </span>
             </div>
 
             <div className="p-4 rounded-xl border border-neutral-200 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-neutral-900">Utilities, Fuel & Generator</span>
-                <span className="text-xs font-mono font-bold text-neutral-900">{formatNaira(fin.utilitiesCost)}</span>
+                <span className="text-xs font-bold text-neutral-900">Electricity, Water & Other Utilities</span>
+                <span className="text-xs font-mono font-bold text-neutral-900">{formatNaira(fin.electricityCost + fin.waterCost + fin.utilitiesCost)}</span>
               </div>
               <div className="w-full bg-neutral-100 rounded-full h-2">
                 <div
                   className="bg-emerald-600 h-2 rounded-full"
-                  style={{ width: `${(fin.utilitiesCost / (metrics.annualOperatingExpenses || 1)) * 100}%` }}
+                  style={{ width: `${((fin.electricityCost + fin.waterCost + fin.utilitiesCost) / (metrics.annualOperatingExpenses || 1)) * 100}%` }}
                 />
               </div>
               <span className="text-[11px] text-neutral-500">
-                {formatNumber((fin.utilitiesCost / (metrics.annualOperatingExpenses || 1)) * 100, 1)}% of annual expenses
+                {formatNumber(((fin.electricityCost + fin.waterCost + fin.utilitiesCost) / (metrics.annualOperatingExpenses || 1)) * 100, 1)}% of annual expenses
               </span>
             </div>
 
             <div className="p-4 rounded-xl border border-neutral-200 space-y-3">
               <div className="flex items-center justify-between">
-                <span className="text-xs font-bold text-neutral-900">Maintenance, Insurance & Contingency</span>
+                <span className="text-xs font-bold text-neutral-900">Maintenance, Security, Insurance & Other</span>
                 <span className="text-xs font-mono font-bold text-neutral-900">
-                  {formatNaira(fin.maintenanceCost + fin.insuranceContingencyCost)}
+                  {formatNaira(fin.maintenanceCost + fin.securityCost + fin.insuranceContingencyCost + fin.miscellaneousCost)}
                 </span>
               </div>
               <div className="w-full bg-neutral-100 rounded-full h-2">
                 <div
                   className="bg-emerald-600 h-2 rounded-full"
-                  style={{ width: `${((fin.maintenanceCost + fin.insuranceContingencyCost) / (metrics.annualOperatingExpenses || 1)) * 100}%` }}
+                  style={{ width: `${((fin.maintenanceCost + fin.securityCost + fin.insuranceContingencyCost + fin.miscellaneousCost) / (metrics.annualOperatingExpenses || 1)) * 100}%` }}
                 />
               </div>
               <span className="text-[11px] text-neutral-500">
-                {formatNumber(((fin.maintenanceCost + fin.insuranceContingencyCost) / (metrics.annualOperatingExpenses || 1)) * 100, 1)}% of annual expenses
+                {formatNumber(((fin.maintenanceCost + fin.securityCost + fin.insuranceContingencyCost + fin.miscellaneousCost) / (metrics.annualOperatingExpenses || 1)) * 100, 1)}% of annual expenses
               </span>
             </div>
           </div>
